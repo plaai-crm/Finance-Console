@@ -495,7 +495,7 @@ async function materializeRecurring(){
       const date=`${ym}-${String(day).padStart(2,'0')}`;
       const row={recurring_id:it.id,kind:it.kind,business_id:it.business_id,category:it.category,
         amount:+it.amount||0,wht:+it.wht||0,txn_date:date,recurrence:'monthly',
-        is_paid: it.kind==='income'? true : false, paid_date: it.kind==='income'? date : null,
+        is_paid:false, paid_date:null,
         note:it.note||'', created_by:'auto'};
       const created=await Store.insert('transactions',row); tx.push(created);
     }
@@ -528,8 +528,8 @@ async function renderDash(p){
   const {bizAll,biz,tx}=await loadScoped();p.innerHTML='';
   const now=new Date();const ym=todayISO().slice(0,7);
   const inMonth=tx.filter(t=>t.txn_date.slice(0,7)===ym);
-  const incGross=inMonth.filter(t=>t.kind==='income').reduce((s,t)=>s+ +t.amount,0);
-  const wht=inMonth.filter(t=>t.kind==='income').reduce((s,t)=>s+(+t.wht||0),0);
+  const incGross=inMonth.filter(t=>t.kind==='income'&&t.is_paid).reduce((s,t)=>s+ +t.amount,0);
+  const wht=inMonth.filter(t=>t.kind==='income'&&t.is_paid).reduce((s,t)=>s+(+t.wht||0),0);
   const incNet=incGross-wht;
   const expense=inMonth.filter(t=>t.kind==='expense').reduce((s,t)=>s+ +t.amount,0);
   const unpaid=tx.filter(t=>t.kind==='expense'&&!t.is_paid).reduce((s,t)=>s+ +t.amount,0);
@@ -537,7 +537,7 @@ async function renderDash(p){
   p.append(el('div',{class:'updated'},'อัปเดตล่าสุด '+`${now.getDate()} ${TH_M[now.getMonth()]} ${now.getFullYear()+543} เวลา ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} น.`));
 
   p.append(el('div',{class:'kpis'},
-    kpi('pos','รายรับสุทธิ (เดือนนี้)',money(incNet),'฿'),
+    kpi('pos','รายรับที่ได้รับแล้ว (เดือนนี้)',money(incNet),'฿'),
     kpi('neg','รายจ่าย (เดือนนี้)',money(expense),'฿'),
     kpi(incNet-expense>=0?'ink':'neg','คงเหลือสุทธิ',money(incNet-expense),'฿'),
     kpi('gold','ค้างจ่ายทั้งหมด',money(unpaid),'฿')));
@@ -558,10 +558,45 @@ async function renderDash(p){
   });
   p.append(rc);
 
+  // ---- เงินค้างรับ (accounts receivable) แยกตามเดือน ----
+  {
+    const arItems=tx.filter(t=>t.kind==='income'&&!t.is_paid).sort((a,b)=>(a.txn_date||'').localeCompare(b.txn_date||''));
+    const arTotal=arItems.reduce((s,t)=>s+ +t.amount,0);
+    const arCard=el('div',{class:'card'});
+    arCard.append(el('div',{class:'card-h'},
+      el('div',{},el('div',{class:'section-eyebrow'},'เงินที่ยังเก็บไม่ครบ'),el('h2',{},'เงินค้างรับ · แยกตามเดือนที่คาดว่าจะได้รับ')),
+      arItems.length?el('span',{class:'chip c-unpaid'},money(arTotal)+' ฿ · '+arItems.length+' รายการ'):el('span',{class:'chip c-paid'},'เก็บครบแล้ว')));
+    if(!arItems.length){
+      arCard.append(el('div',{class:'empty',html:svg(I.check)+'<div>ไม่มียอดค้างรับ — เก็บเงินครบทุกธุรกิจ</div>'}));
+    }else{
+      const groups={};
+      arItems.forEach(t=>{const k=(t.txn_date||'').slice(0,7);(groups[k]=groups[k]||[]).push(t);});
+      Object.keys(groups).sort().forEach(k=>{
+        const g=groups[k];const sub=g.reduce((s,t)=>s+ +t.amount,0);
+        const mm=k?(+k.split('-')[1]):0,yy=k?(+k.split('-')[0]):0;
+        const monthLbl=k?`${TH_MF[mm-1]} ${yy+543}`:'ไม่ระบุเดือน';
+        arCard.append(el('div',{class:'card-h',style:'margin:16px 0 6px'},
+          el('div',{class:'t-title',style:'color:var(--navy)'},monthLbl),
+          el('div',{class:'num pos'},money(sub)+' ฿')));
+        const tb=el('table',{class:'table'});const bd=el('tbody',{});
+        g.forEach(t=>{const d=daysUntil(t.txn_date);const late=d<0;
+          const when=late?`เลยกำหนด ${-d} วัน`:d===0?'ครบกำหนดวันนี้':`อีก ${d} วัน`;
+          bd.append(el('tr',{},
+            el('td',{style:'width:34px'},el('button',{class:'check',title:'ทำเครื่องหมายว่ารับเงินแล้ว',html:svg(I.check),onclick:async()=>{await Store.update('transactions',t.id,{is_paid:true,paid_date:todayISO()});toast('รับเงินแล้ว');render();}})),
+            el('td',{},el('div',{class:'t-title'},t.category||'รายรับ'),el('div',{class:'t-sub'},`${bizName(bizAll,t.business_id)} · ${fmtDate(t.txn_date)}${t.note?' · '+t.note:''}`)),
+            el('td',{style:'text-align:right'},el('div',{class:'num pos'},money(t.amount)+' ฿'),el('div',{style:'font-size:.8rem;font-weight:700;'+(late?'color:var(--red)':'color:var(--emer)')},when))));
+        });
+        tb.append(bd);arCard.append(tb);
+      });
+    }
+    arCard.append(el('div',{class:'field-help',style:'margin-top:12px'},'ยอดเหล่านี้บันทึกเป็นรายรับแล้วแต่ยังเก็บเงินไม่ครบ · กดเครื่องหมายถูกเมื่อได้รับเงินแล้ว ยอดจะออกจากรายการค้างรับทันที'));
+    p.append(arCard);
+  }
+
   // 6-month trend
   const months=[];for(let i=5;i>=0;i--)months.push(ymOffset(-i));
   const data=months.map(m=>{const rows=tx.filter(t=>t.txn_date.slice(0,7)===m);
-    return {m,inc:rows.filter(t=>t.kind==='income').reduce((s,t)=>s+txNet(t),0),exp:rows.filter(t=>t.kind==='expense').reduce((s,t)=>s+ +t.amount,0)};});
+    return {m,inc:rows.filter(t=>t.kind==='income'&&t.is_paid).reduce((s,t)=>s+txNet(t),0),exp:rows.filter(t=>t.kind==='expense').reduce((s,t)=>s+ +t.amount,0)};});
   const max=Math.max(1,...data.map(d=>Math.max(d.inc,d.exp)));
   const tc=el('div',{class:'card'});
   tc.append(el('div',{class:'card-h'},el('h2',{},'แนวโน้ม 6 เดือน (รายรับสุทธิ vs รายจ่าย)')));
@@ -582,12 +617,13 @@ async function renderDash(p){
   if(!biz.length)bc.append(emptyBox('ยังไม่มีธุรกิจในสิทธิ์ของคุณ'));
   else{
     const tb=el('table',{class:'table'});
-    tb.append(el('thead',{},el('tr',{},el('th',{},'ธุรกิจ'),el('th',{},'รายรับสุทธิ'),el('th',{},'รายจ่าย'),el('th',{style:'text-align:right'},'สุทธิ'))));
+    tb.append(el('thead',{},el('tr',{},el('th',{},'ธุรกิจ'),el('th',{},'รับแล้ว'),el('th',{},'รายจ่าย'),el('th',{},'ค้างรับ'),el('th',{style:'text-align:right'},'สุทธิ'))));
     const bd=el('tbody',{});
     biz.forEach(b=>{const rows=inMonth.filter(t=>t.business_id===b.id);
-      const inc=rows.filter(t=>t.kind==='income').reduce((s,t)=>s+txNet(t),0);
+      const inc=rows.filter(t=>t.kind==='income'&&t.is_paid).reduce((s,t)=>s+txNet(t),0);
       const exp=rows.filter(t=>t.kind==='expense').reduce((s,t)=>s+ +t.amount,0);
-      bd.append(el('tr',{},el('td',{},el('span',{class:'t-title'},b.name)),el('td',{class:'t-sub'},money(inc)),el('td',{class:'t-sub'},money(exp)),el('td',{class:'num '+((inc-exp)>=0?'pos':'neg')},money(inc-exp))));});
+      const arb=tx.filter(t=>t.business_id===b.id&&t.kind==='income'&&!t.is_paid).reduce((s,t)=>s+ +t.amount,0);
+      bd.append(el('tr',{},el('td',{},el('span',{class:'t-title'},b.name)),el('td',{class:'t-sub'},money(inc)),el('td',{class:'t-sub'},money(exp)),el('td',{},arb>0?el('span',{class:'chip c-unpaid'},money(arb)):el('span',{class:'t-sub'},'—')),el('td',{class:'num '+((inc-exp)>=0?'pos':'neg')},money(inc-exp))));});
     tb.append(bd);bc.append(tb);
   }
   p.append(bc);
@@ -648,15 +684,16 @@ async function renderTrans(p){
     tb.append(el('thead',{},el('tr',{},el('th',{style:'width:34px'},''),el('th',{},'รายการ'),el('th',{},'สถานะ'),el('th',{style:'text-align:right'},'จำนวน'),el('th',{style:'width:70px'},''))));
     const bd=el('tbody',{});
     rows.forEach(t=>{const isE=t.kind==='expense';
-      const chk=isE?el('button',{class:'check'+(t.is_paid?' done':''),title:t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย',html:svg(I.check),onclick:async()=>{await Store.update('transactions',t.id,{is_paid:!t.is_paid,paid_date:!t.is_paid?todayISO():null});toast(!t.is_paid?'จ่ายแล้ว':'ยกเลิกการจ่าย');renderTrans(p);}}):'';
+      const chk=el('button',{class:'check'+(t.is_paid?' done':''),title:isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ยังไม่ได้รับ'),html:svg(I.check),onclick:async()=>{const nv=!t.is_paid;await Store.update('transactions',t.id,{is_paid:nv,paid_date:nv?todayISO():null});toast(isE?(nv?'จ่ายแล้ว':'ยกเลิกการจ่าย'):(nv?'รับเงินแล้ว':'ยกเลิกรับเงิน'));renderTrans(p);}});
       const whtNote=(!isE&&+t.wht>0)?` · หัก ณ ที่จ่าย ${money(t.wht)} · สุทธิ ${money(txNet(t))}`:'';
+      const dateTxt=(!isE&&!t.is_paid)?('คาดรับ '+fmtDate(t.txn_date)):fmtDate(t.txn_date);
       bd.append(el('tr',{},
         el('td',{},chk),
-        el('td',{},el('div',{class:'t-title'},t.category||(isE?'ค่าใช้จ่าย':'รายรับ')),el('div',{class:'t-sub'},`${bizName(bizAll,t.business_id)} · ${fmtDate(t.txn_date)}${whtNote}${t.note?' · '+t.note:''}`)),
+        el('td',{},el('div',{class:'t-title'},t.category||(isE?'ค่าใช้จ่าย':'รายรับ')),el('div',{class:'t-sub'},`${bizName(bizAll,t.business_id)} · ${dateTxt}${whtNote}${t.note?' · '+t.note:''}`)),
         el('td',{},el('div',{style:'display:flex;gap:6px;flex-wrap:wrap'},
           el('span',{class:'chip '+(isE?'c-out':'c-in')},isE?'จ่าย':'รับ'),
           t.recurring_id?el('span',{class:'chip c-auto',title:'สร้างอัตโนมัติจากรายการประจำ'},'อัตโนมัติ'):el('span',{class:'chip '+(t.recurrence==='monthly'?'c-monthly':'c-once')},t.recurrence==='monthly'?'ทุกเดือน':'ครั้งเดียว'),
-          isE?el('span',{class:'chip '+(t.is_paid?'c-paid':'c-unpaid')},t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):'')),
+          el('span',{class:'chip '+(t.is_paid?'c-paid':'c-unpaid')},isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ค้างรับ')))),
         el('td',{class:'num '+(isE?'neg':'pos')},(isE?'−':'+')+money(t.amount)),
         el('td',{style:'text-align:right'},el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openTxnModal(biz,t)},'แก้ไข'))));
     });
@@ -684,6 +721,7 @@ function openTxnModal(biz,existing){
   const bizSel=el('select',{});biz.forEach(b=>{const o=el('option',{value:b.id},b.name);if(t.business_id===b.id)o.selected=true;bizSel.append(o);});
   const amt=el('input',{type:'number',inputmode:'decimal',placeholder:'0.00',value:t.amount||''});
   const date=el('input',{type:'date',value:t.txn_date||todayISO()});
+  const dateLabel=el('label',{},'วันที่');
   let rec=t.recurrence||'once';
   const recSeg=segControl([['once','ครั้งเดียว'],['monthly','ทุกเดือน (ครั้งนี้)']],rec,v=>rec=v);
   const note=el('input',{type:'text',placeholder:'หมายเหตุ (ไม่บังคับ)',value:t.note||''});
@@ -700,16 +738,24 @@ function openTxnModal(biz,existing){
   let paid=!!t.is_paid;const paidWrap=el('div',{class:'fld'});
   const paidBtn=el('button',{class:'pchip'+(paid?' sel':''),onclick:()=>{paid=!paid;paidBtn.className='pchip'+(paid?' sel':'');paidBtn.textContent=paid?'✓ จ่ายแล้ว':'ยังไม่จ่าย';}},paid?'✓ จ่ายแล้ว':'ยังไม่จ่าย');
   paidWrap.append(el('label',{},'สถานะการจ่าย'),paidBtn);
-  function toggleKindUI(){paidWrap.style.display=kind==='expense'?'block':'none';whtWrap.style.display=kind==='income'?'block':'none';}
+
+  // received (income only) — เงินค้างรับ
+  let received = existing ? !!t.is_paid : true;
+  const recvWrap=el('div',{class:'fld'});
+  const recvBtn=el('button',{class:'pchip'+(received?' sel':''),onclick:()=>{received=!received;recvBtn.className='pchip'+(received?' sel':'');recvBtn.textContent=received?'✓ ได้รับแล้ว':'ยังไม่ได้รับ (ค้างรับ)';updateDateLabel();}},received?'✓ ได้รับแล้ว':'ยังไม่ได้รับ (ค้างรับ)');
+  recvWrap.append(el('label',{},'สถานะการรับเงิน'),recvBtn,el('div',{class:'field-help',style:'margin-top:6px'},'ถ้ายังเก็บเงินไม่ครบ เลือก “ยังไม่ได้รับ” แล้วใส่ยอดที่ค้างและวันที่คาดว่าจะได้รับ'));
+
+  function updateDateLabel(){dateLabel.textContent = kind==='income' ? (received?'วันที่รับเงิน':'วันที่คาดว่าจะได้รับ') : 'วันที่ / กำหนดจ่าย';}
+  function toggleKindUI(){paidWrap.style.display=kind==='expense'?'block':'none';recvWrap.style.display=kind==='income'?'block':'none';whtWrap.style.display=kind==='income'?'block':'none';updateDateLabel();}
 
   drawCats();toggleKindUI();
   body.append(
     el('div',{class:'fld'},el('label',{},'ประเภท'),seg),
     el('div',{class:'fld'},el('label',{},'ธุรกิจ'),bizSel),
     el('div',{class:'fld'},el('label',{},'หมวด / รายการ'),catChips,catInput),
-    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'จำนวนเงิน (บาท)'),amt),el('div',{class:'fld'},el('label',{},'วันที่'),date)),
+    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'จำนวนเงิน (บาท)'),amt),el('div',{class:'fld'},dateLabel,date)),
     el('div',{class:'field-help',style:'margin:-8px 0 12px'},'เลือกวันในอนาคตเพื่อกรอกล่วงหน้าได้ (ไม่จำกัดจำนวนวัน)'),
-    whtWrap, paidWrap,
+    whtWrap, recvWrap, paidWrap,
     el('div',{class:'fld'},el('label',{},'รูปแบบ'),recSeg),
     el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note));
   m.append(body);
@@ -719,7 +765,7 @@ function openTxnModal(biz,existing){
     el('button',{class:'btn btn-dark',onclick:async()=>{
       const a=Number(amt.value);if(!a||a<=0){toast('กรุณาใส่จำนวนเงิน');return;}
       const w=(kind==='income'&&hasWht)?Number(whtAmt.value||0):0;
-      const payload={kind,business_id:bizSel.value,category:catInput.value.trim()||(kind==='expense'?'ค่าใช้จ่าย':'รายรับ'),amount:a,wht:w,txn_date:date.value,recurrence:rec,note:note.value.trim(),is_paid:kind==='expense'?paid:true,paid_date:(kind==='expense'&&paid)?todayISO():(kind==='income'?date.value:null),created_by:App.user.username};
+      const payload={kind,business_id:bizSel.value,category:catInput.value.trim()||(kind==='expense'?'ค่าใช้จ่าย':'รายรับ'),amount:a,wht:w,txn_date:date.value,recurrence:rec,note:note.value.trim(),is_paid:kind==='expense'?paid:received,paid_date:kind==='expense'?(paid?todayISO():null):(received?date.value:null),created_by:App.user.username};
       if(existing)await Store.update('transactions',existing.id,payload);else await Store.insert('transactions',payload);
       toast('บันทึกแล้ว');closeModal();render();
     }},'บันทึก'));
