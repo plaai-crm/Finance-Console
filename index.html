@@ -237,6 +237,34 @@
   .alert-over .ao-ic{width:38px;height:38px;border-radius:10px;background:#fff;border:1px solid #e7b7b0;color:var(--red);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
   .alert-over .ao-ic svg{width:20px;height:20px}
   .metric-note{font-size:.82rem;color:var(--muted);line-height:1.7;background:#f8f9fb;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:4px}
+  /* investment performance dashboard */
+  .amgm{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;margin:2px 0 4px}
+  .amgm .box{flex:1;min-width:150px;background:linear-gradient(180deg,#fbfcfe,#f5f7fb);border:1px solid var(--line);border-radius:13px;padding:15px 17px;position:relative;overflow:hidden}
+  .amgm .box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--navy)}
+  .amgm .box.pos::before{background:var(--emer)} .amgm .box.neg::before{background:var(--red)} .amgm .box.gold::before{background:linear-gradient(180deg,#d4b878,#b18f4e)}
+  .amgm .box .lab{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+  .amgm .box .big{font-size:1.95rem;font-weight:800;font-variant-numeric:tabular-nums;margin-top:5px;letter-spacing:-.02em;line-height:1.1}
+  .amgm .box.pos .big{color:var(--emer)} .amgm .box.neg .big{color:var(--red)} .amgm .box.gold .big{color:#87641c}
+  .amgm .box .sub{font-size:.76rem;color:var(--faint);margin-top:3px}
+  .hbar{display:flex;align-items:center;gap:11px;margin:9px 0}
+  .hbar .hl{width:132px;font-size:.85rem;color:var(--ink);font-weight:600;flex:0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbar-track{flex:1;height:13px;background:#eef0f4;border-radius:7px;overflow:hidden}
+  .hbar-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#c3a563,#b18f4e);min-width:2px;transition:width .35s}
+  .hbar .hv{width:112px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;font-size:.86rem;flex:0 0 auto;color:var(--muted)}
+  .bar.gd{background:linear-gradient(180deg,#d4b878,#b18f4e)}
+  .bar.ret{background:var(--emer)} .bar.ret.dn{background:var(--red)}
+  .zeroline{position:relative;height:1px;background:var(--line-strong);margin:0 0 6px}
+  .yrrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .yrrow:last-child{border-bottom:none}
+  .yrrow .yt{font-weight:700;font-variant-numeric:tabular-nums;min-width:62px}
+  .yrrow .yv{flex:1;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .yrrow .yr{min-width:92px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .amgm-table{width:100%;border-collapse:collapse}
+  .amgm-table th{text-align:left;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:0 10px 9px;border-bottom:1px solid var(--line)}
+  .amgm-table td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle;font-variant-numeric:tabular-nums}
+  .amgm-table tr:last-child td{border-bottom:none}
+  .pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .pill.pos{background:var(--emer-soft);color:var(--emer)} .pill.neg{background:var(--red-soft);color:var(--red)} .pill.na{background:#eef0f4;color:var(--faint)}
   .logline{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);align-items:flex-start}
   .logline:last-child{border-bottom:none}
   .logline .lt{font-size:.78rem;color:var(--faint);font-weight:600;white-space:nowrap;min-width:96px}
@@ -373,7 +401,9 @@ const svg=(p,cls='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 const TH_M=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const TH_MF=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const TH_D=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-const REMIND_DAYS=3;
+const REMIND_DAYS=3; // ค่าเริ่มต้น (จำนวนวันแจ้งล่วงหน้า) ใช้เมื่อยังไม่ได้ตั้งค่าเอง
+// การตั้งค่าแจ้งเตือน — โหลดจากคลาวด์ (LINE) หรือเครื่อง แล้วใช้ทั้งในแอปและ LINE ให้ตรงกัน
+const Settings={remind_days:REMIND_DAYS,reminder_message:'',send_when_empty:false,line_enabled:true};
 const EXPENSE_SUGGEST=['ค่าน้ำ','ค่าไฟ','เงินเดือนพนักงาน','เงินเดือนแม่บ้าน','ค่าซื้อของ/วัตถุดิบ','ค่าผ่อนรถ','ค่าน้ำมัน','ค่าบำรุงรักษา','ค่าอินเทอร์เน็ต','ค่าเช่า','ภาษี/ค่าธรรมเนียม','อื่น ๆ'];
 const INCOME_SUGGEST=['ค่าเช่าห้อง','ค่าเช่าตึก','เงินเดือน','รายได้ซักรีด','รายได้คลีนนิ่ง','รายได้ขายบ้าน','ค่าน้ำ/ค่าไฟจากผู้เช่า','อื่น ๆ'];
 const BANK_SUGGEST=['กสิกรไทย','ไทยพาณิชย์ (SCB)','กรุงเทพ (BBL)','กรุงไทย (KTB)','กรุงศรี (BAY)','ทีทีบี (ttb)','เงินสด'];
@@ -428,6 +458,52 @@ async function seedIfEmpty(){
       {id:'b_hotel',  name:'โรงแรม',category:'hotel',active:true},
     ]);
     localStorage.setItem('fc_seeded','1');
+  }
+}
+
+/* ---------- การตั้งค่าแจ้งเตือน (ในแอป + LINE) ---------- */
+// โหลดค่าปัจจุบัน: คลาวด์อ่านจาก LINE ผ่าน fc_get_line_settings, โหมดทดลองอ่านจากเครื่อง
+async function loadSettings(){
+  try{
+    if(USE_CLOUD){
+      const {data,error}=await sb.rpc('fc_get_line_settings');
+      if(!error && data){
+        Settings.remind_days=Number(data.remind_days ?? REMIND_DAYS);
+        Settings.reminder_message=data.custom_message||'';
+        Settings.send_when_empty=!!data.send_when_empty;
+        Settings.line_enabled=data.enabled!==false;
+      }
+    }else{
+      const s=JSON.parse(localStorage.getItem('fc_settings')||'null');
+      if(s){
+        Settings.remind_days=Number(s.remind_days ?? REMIND_DAYS);
+        Settings.reminder_message=s.reminder_message||'';
+        Settings.send_when_empty=!!s.send_when_empty;
+        Settings.line_enabled=s.line_enabled!==false;
+      }
+    }
+  }catch(e){/* ยังไม่ได้ติดตั้ง LINE — ใช้ค่าเริ่มต้น */}
+  if(!(Settings.remind_days>=0))Settings.remind_days=REMIND_DAYS;
+}
+// บันทึกค่า: คลาวด์ส่งไปที่ LINE ผ่าน fc_set_line_settings (ให้แอปและ LINE ตรงกัน)
+async function saveSettings(vals){
+  Settings.remind_days=Number(vals.remind_days);
+  Settings.reminder_message=vals.reminder_message||'';
+  Settings.send_when_empty=!!vals.send_when_empty;
+  Settings.line_enabled=vals.line_enabled!==false;
+  if(USE_CLOUD){
+    const {error}=await sb.rpc('fc_set_line_settings',{
+      p_remind_days:Settings.remind_days,
+      p_custom_message:Settings.reminder_message,
+      p_send_when_empty:Settings.send_when_empty,
+      p_enabled:Settings.line_enabled
+    });
+    if(error)throw error;
+  }else{
+    localStorage.setItem('fc_settings',JSON.stringify({
+      remind_days:Settings.remind_days,reminder_message:Settings.reminder_message,
+      send_when_empty:Settings.send_when_empty,line_enabled:Settings.line_enabled
+    }));
   }
 }
 
@@ -494,6 +570,59 @@ function portfolioAMGM(list){
   const gm=Math.pow(prod,1/rows.length)-1;
   return {am,gm,n:rows.length};
 }
+const yrOf=iso=>iso?Number(String(iso).slice(0,4)):null;
+// สร้างชุดมูลค่า "สิ้นปี" ของสินทรัพย์หนึ่งรายการ แล้วคำนวณผลตอบแทนรายปี + AM & GM
+// จุดตั้งต้น = ต้นทุนรวม (รวมค่าธรรมเนียม) ณ ปีที่ซื้อ, จุดถัดไป = มูลค่าที่บันทึกทุกสิ้นปี
+function assetSeries(iv,vals){
+  const c=investCalc(iv);
+  const buyYear=yrOf(iv.buy_date);
+  const logs=(vals||[]).filter(v=>v.investment_id===iv.id && v.value!=null && v.value!=='')
+    .map(v=>({id:v.id,year:Number(v.year),value:+v.value,note:v.note||''}))
+    .filter(v=>!isNaN(v.year))
+    .sort((a,b)=>a.year-b.year);
+  const points=[{year:buyYear,value:c.cost,base:true}];
+  logs.forEach(l=>points.push({year:l.year,value:l.value}));
+  const rets=[];
+  for(let i=1;i<points.length;i++){
+    const prev=points[i-1].value, cur=points[i].value;
+    if(prev>0) rets.push({year:points[i].year,r:cur/prev-1});
+  }
+  const n=rets.length;
+  const am=n?rets.reduce((s,x)=>s+x.r,0)/n:null;
+  const gm=n?Math.pow(rets.reduce((s,x)=>s*(1+x.r),1),1/n)-1:null;
+  const latest=logs.length?logs[logs.length-1].value:(c.cur>0?c.cur:c.cost);
+  const totRet=c.cost>0?latest/c.cost-1:0;
+  return {cost:c.cost,latest,logs,points,rets,n,am,gm,totRet,buyYear};
+}
+// พอร์ตรวมแบบอิงเวลา: รวมมูลค่ารายปีของทุกสินทรัพย์ (carry-forward) แล้วคิดผลตอบแทนรายปี
+// ปรับเงินลงทุนใหม่ที่เพิ่มเข้ามาระหว่างปีออก เพื่อไม่ให้ผลตอบแทนบิดเบือน
+function portfolioSeriesTS(list,vals){
+  const held=list.map(iv=>({iv,s:assetSeries(iv,vals)})).filter(x=>x.s.buyYear!=null);
+  if(!held.length)return{years:[],value:[],rets:[],am:null,gm:null,costTot:0,latestTot:0};
+  const minY=Math.min(...held.map(x=>x.s.buyYear));
+  const loggedYears=held.flatMap(x=>x.s.logs.map(l=>l.year));
+  const maxY=loggedYears.length?Math.max(minY,...loggedYears):minY; // ถึงปีสุดท้ายที่มีบันทึกจริง
+  const valueAt=(s,Y)=>{
+    if(Y<s.buyYear)return 0;
+    const past=s.logs.filter(l=>l.year<=Y);
+    return past.length?past[past.length-1].value:s.cost;
+  };
+  const years=[],value=[];
+  for(let Y=minY;Y<=maxY;Y++){years.push(Y);value.push(held.reduce((t,x)=>t+valueAt(x.s,Y),0));}
+  const rets=[];
+  // วัดผลตอบแทนเฉพาะช่วงปีต่อปีจริง (ข้ามปีฐาน) ปรับเงินลงทุนใหม่ที่เพิ่มระหว่างปีออก
+  for(let i=1;i<years.length;i++){
+    const Y=years[i], start=value[i-1];
+    const newCost=held.filter(x=>x.s.buyYear===Y).reduce((t,x)=>t+x.s.cost,0);
+    if(start>0)rets.push({year:Y,r:(value[i]-newCost)/start-1});
+  }
+  const n=rets.length;
+  const am=n?rets.reduce((s,x)=>s+x.r,0)/n:null;
+  const gm=n?Math.pow(rets.reduce((s,x)=>s*(1+x.r),1),1/n)-1:null;
+  const costTot=held.reduce((t,x)=>t+x.s.cost,0);
+  const latestTot=held.reduce((t,x)=>t+x.s.latest,0);
+  return{years,value,rets,am,gm,costTot,latestTot};
+}
 // รายได้ค่าค้ำประกัน (ต่อปี)
 function guaranteeCalc(g){
   const face=+g.facility_amount||0;
@@ -527,6 +656,7 @@ async function doLogin(){
   $('#avatar').textContent=initials(found.name||found.username);
   $('#sideName').textContent=found.name||found.username;
   $('#sideRole').textContent=ROLE_LABEL[found.role]+(found.role==='staff'?' · '+SCOPE_LABEL[found.scope]:'');
+  await loadSettings();
   await materializeRecurring();
   buildNav(); go('dash');
   resetIdle(); // เริ่มจับเวลาไม่ใช้งาน 30 นาที
@@ -647,10 +777,11 @@ async function renderDash(p){
   if(wht>0) p.append(el('div',{class:'card',style:'margin-top:-8px'},el('div',{class:'t-sub'},`รายรับก่อนหัก ${money(incGross)} บาท · หัก ณ ที่จ่ายเดือนนี้ ${money(wht)} บาท`)));
 
   // reminders
-  const due=tx.filter(t=>t.kind==='expense'&&!t.is_paid&&daysUntil(t.txn_date)<=REMIND_DAYS).sort((a,b)=>a.txn_date.localeCompare(b.txn_date));
+  const due=tx.filter(t=>t.kind==='expense'&&!t.is_paid&&daysUntil(t.txn_date)<=Settings.remind_days).sort((a,b)=>a.txn_date.localeCompare(b.txn_date));
   const rc=el('div',{class:'card'});
-  rc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'ต้องดำเนินการ'),el('h2',{},`รายการที่ต้องจ่ายภายใน ${REMIND_DAYS} วัน`)),
+  rc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'ต้องดำเนินการ'),el('h2',{},`รายการที่ต้องจ่ายภายใน ${Settings.remind_days} วัน`)),
     due.length?el('span',{class:'chip c-unpaid'},due.length+' รายการ'):el('span',{class:'chip c-paid'},'ครบแล้ว')));
+  if(Settings.reminder_message)rc.append(el('div',{class:'metric-note',style:'margin-bottom:12px;white-space:pre-wrap'},Settings.reminder_message));
   if(!due.length)rc.append(el('div',{class:'empty',html:svg(I.check)+'<div>ไม่มีรายการค้างจ่ายที่ใกล้ถึงกำหนด</div>'}));
   else due.forEach(t=>{const d=daysUntil(t.txn_date);const late=d<=0;const when=d<0?`เลยกำหนด ${-d} วัน`:d===0?'ครบกำหนดวันนี้':`อีก ${d} วัน`;
     rc.append(el('div',{class:'reminder'},
@@ -753,7 +884,7 @@ async function renderTrans(p){
   p.append(el('div',{class:'card'},
     el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'บันทึกรายการ'),el('h2',{},'เพิ่มรายรับหรือรายจ่าย')),
       el('button',{class:'btn btn-dark',html:svg(I.plus)+'เพิ่มรายการ',onclick:()=>openTxnModal(biz)})),
-    el('div',{class:'field-help'},`กรอกล่วงหน้าได้ไม่จำกัดวัน · เลือกวัน/เดือน/ปีได้ · ระบบจะเตือนรายจ่ายก่อนถึงกำหนด ${REMIND_DAYS} วัน`)));
+    el('div',{class:'field-help'},`กรอกล่วงหน้าได้ไม่จำกัดวัน · เลือกวัน/เดือน/ปีได้ · ระบบจะเตือนรายจ่ายก่อนถึงกำหนด ${Settings.remind_days} วัน`)));
 
   // recurring templates
   const recs=(await Store.list('recurring_items')).filter(r=>{const b=bizAll.find(x=>x.id===r.business_id);return b&&scopedBusinesses(bizAll).some(x=>x.id===b.id);});
@@ -1139,59 +1270,163 @@ function loanCardEl(l,c,fCount){
   return card;
 }
 
-/* ===== SUB: ลงทุน (owner only) ===== */
+/* ===== SUB: ลงทุน (owner only) — แดชบอร์ดประเมินผลตอบแทน ===== */
+const PERF_PAL=['#b18f4e','#22345c','#0d6f4c','#6b3fa0','#a86f1c','#3b4aa0','#616b81'];
 async function renderInvestSub(p){
   if(!isOwner()){p.append(el('div',{class:'card'},emptyBox('เฉพาะเจ้าของกิจการ (Owner) เท่านั้น')));return;}
   const list=await Store.list('investments',{col:'buy_date',asc:false});
-  const costTot=list.reduce((s,iv)=>s+investCalc(iv).cost,0);
-  const curTot=list.reduce((s,iv)=>s+investCalc(iv).cur,0);
+  let vals=[]; try{vals=await Store.list('investment_values');}catch(e){vals=[];}
+  const series=list.map(iv=>({iv,s:assetSeries(iv,vals)}));
+  const costTot=series.reduce((t,x)=>t+x.s.cost,0);
+  const curTot=series.reduce((t,x)=>t+x.s.latest,0);
   const gainTot=curTot-costTot;
-  const port=portfolioAMGM(list);
+  const totRetTot=costTot>0?gainTot/costTot:0;
+  const port=portfolioSeriesTS(list,vals);
+  const thisYear=new Date().getFullYear();
+  const loggedThisYear=vals.some(v=>Number(v.year)===thisYear);
 
+  /* ---- Header + KPI ---- */
   const hc=el('div',{class:'card'});
-  hc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'พอร์ตการลงทุน'),el('h2',{})),
+  hc.append(el('div',{class:'card-h'},
+    el('div',{},el('div',{class:'section-eyebrow'},'พอร์ตการลงทุน'),
+      el('h2',{html:'ผลตอบแทนการลงทุน &nbsp;<span class="owner-only-tag">เฉพาะ Owner</span>'})),
     el('button',{class:'btn btn-dark',html:svg(I.plus)+'เพิ่มการลงทุน',onclick:()=>openInvestmentModal()})));
-  hc.querySelector('h2').innerHTML='เงินลงทุนในสินทรัพย์ &nbsp;<span class="owner-only-tag">เฉพาะ Owner</span>';
   hc.append(el('div',{class:'kpis',style:'margin:0'},
     kpi('gold','ต้นทุนรวม (รวมค่าธรรมเนียม)',money(costTot),'฿'),
     kpi('ink','มูลค่าปัจจุบันรวม',money(curTot),'฿'),
-    kpi(gainTot>=0?'pos':'neg','กำไร/ขาดทุนที่ยังไม่รับรู้',money(gainTot),'฿'),
-    kpi(port.am>=0?'pos':'neg','ผลตอบแทนพอร์ต (AM ต่อปี ต่อสินทรัพย์)',pct(port.am),'')));
+    kpi(gainTot>=0?'pos':'neg','กำไร/ขาดทุนสะสม',money(gainTot),'฿'),
+    kpi(totRetTot>=0?'pos':'neg','ผลตอบแทนรวมสะสม',pct(totRetTot),'')));
   p.append(hc);
+  if(!list.length){p.append(el('div',{class:'card'},emptyBox('ยังไม่มีการลงทุน — กด “เพิ่มการลงทุน” เพื่อเริ่มต้น')));return;}
 
-  if(list.length){
-    const sc=el('div',{class:'card'});
-    sc.append(el('div',{class:'card-h'},el('h2',{},'สรุปผลตอบแทนทั้งพอร์ต')));
-    sc.append(el('div',{class:'dgrid'},
-      el('div',{class:'dcell '+(port.am>=0?'pos':'neg')},el('div',{class:'l'},'ผลตอบแทนเฉลี่ยเลขคณิต (AM)'),el('div',{class:'v'},pct(port.am))),
-      el('div',{class:'dcell '+(port.gm>=0?'pos':'neg')},el('div',{class:'l'},'ผลตอบแทนเฉลี่ยเรขาคณิต (GM)'),el('div',{class:'v'},pct(port.gm)))));
-    sc.append(el('div',{class:'metric-note'},'AM (Arithmetic Mean) = ค่าเฉลี่ยผลตอบแทนรวมของทุกสินทรัพย์แบบธรรมดา · GM (Geometric Mean) = รากที่ n ของผลคูณ (1 + ผลตอบแทนของแต่ละสินทรัพย์) แล้วลบ 1 ซึ่งสะท้อนการทบต้นได้ดีกว่า · ระดับสินทรัพย์: AM ต่อปี = ผลตอบแทนรวม ÷ จำนวนปีถือครอง, GM ต่อปี = CAGR (อัตราเติบโตทบต้นต่อปี)'));
-    p.append(sc);
+  /* ---- แจ้งเตือนบันทึกค่าสิ้นปี ---- */
+  if(!loggedThisYear){
+    p.append(el('div',{class:'reminder'},
+      el('div',{class:'rm-main'},
+        el('div',{class:'rm-title'},`ยังไม่ได้บันทึกมูลค่าสิ้นปี ${thisYear+543}`),
+        el('div',{class:'rm-meta'},'ลงมูลค่า ณ สิ้นปีของแต่ละสินทรัพย์ เพื่ออัปเดตผลตอบแทน AM / GM ให้เป็นปัจจุบัน')),
+      el('div',{class:'rm-when'},'รอบสิ้นปี')));
   }
 
+  /* ---- ACTIVE DASHBOARD: AM/GM ระดับพอร์ต ---- */
+  const dc=el('div',{class:'card'});
+  dc.append(el('div',{class:'card-h'},
+    el('div',{},el('div',{class:'section-eyebrow'},'Active Dashboard'),el('h2',{},'ภาพรวมผลตอบแทนทั้งพอร์ต')),
+    el('span',{class:'hint'},port.rets.length?`ประเมินจากผลตอบแทน ${port.rets.length} ปี`:'ยังไม่พอคำนวณรายปี')));
+  const amCls=port.am==null?'':(port.am>=0?'pos':'neg'), gmCls=port.gm==null?'':(port.gm>=0?'pos':'neg');
+  dc.append(el('div',{class:'amgm'},
+    el('div',{class:'box '+amCls},el('div',{class:'lab'},'ผลตอบแทนเฉลี่ยเลขคณิต · AM'),
+      el('div',{class:'big'},port.am==null?'—':pct(port.am)),el('div',{class:'sub'},'ค่าเฉลี่ยผลตอบแทนรายปี')),
+    el('div',{class:'box '+gmCls},el('div',{class:'lab'},'ผลตอบแทนเฉลี่ยเรขาคณิต · GM'),
+      el('div',{class:'big'},port.gm==null?'—':pct(port.gm)),el('div',{class:'sub'},'อัตราทบต้นต่อปี (CAGR)')),
+    el('div',{class:'box gold'},el('div',{class:'lab'},'มูลค่าเติบโต'),
+      el('div',{class:'big'},money(curTot)),el('div',{class:'sub'},'จากต้นทุน '+money(costTot)+' ฿'))));
+  dc.append(el('div',{class:'metric-note',style:'margin-top:12px'},'<b>AM</b> = ค่าเฉลี่ยธรรมดาของผลตอบแทนแต่ละปี มองแนวโน้มเฉลี่ย · <b>GM</b> = อัตราทบต้นที่แท้จริงต่อปี สะท้อนการเติบโตของเงินจริง (มักต่ำกว่า AM เมื่อผลตอบแทนผันผวน) · พอร์ตปรับเงินลงทุนใหม่ที่เพิ่มระหว่างปีออกจากการคำนวณแล้ว'));
+  p.append(dc);
+
+  /* ---- กราฟมูลค่าพอร์ตรายปี + ผลตอบแทนรายปี ---- */
+  if(port.years.length){
+    const vc=el('div',{class:'card'});
+    vc.append(el('div',{class:'card-h'},el('h2',{},'มูลค่าพอร์ตรายปี & ผลตอบแทนรายปี')));
+    const vmax=Math.max(1,...port.value,costTot);
+    vc.append(el('div',{class:'legend'},el('span',{},el('span',{class:'dot',style:'background:#b18f4e'}),'มูลค่าพอร์ต ณ สิ้นปี')));
+    const vchart=el('div',{class:'barchart'});
+    port.years.forEach((Y,i)=>{
+      vchart.append(el('div',{class:'barcol'},
+        el('div',{class:'barpair'},el('div',{class:'bar gd',style:`height:${Math.round(port.value[i]/vmax*100)}%`,title:money(port.value[i])+' ฿'})),
+        el('div',{class:'barlabel'},String(Y+543))));
+    });
+    vc.append(vchart);
+    if(port.rets.length){
+      const rmax=Math.max(0.01,...port.rets.map(r=>Math.abs(r.r)));
+      vc.append(el('div',{class:'legend',style:'margin-top:20px'},
+        el('span',{},el('span',{class:'dot',style:'background:var(--emer)'}),'ผลตอบแทนบวก'),
+        el('span',{},el('span',{class:'dot',style:'background:var(--red)'}),'ผลตอบแทนลบ')));
+      const rchart=el('div',{class:'barchart',style:'align-items:flex-end'});
+      port.rets.forEach(r=>{
+        const up=r.r>=0;const h=Math.max(4,Math.round(Math.abs(r.r)/rmax*120));
+        rchart.append(el('div',{class:'barcol',style:'justify-content:flex-end'},
+          el('div',{style:'font-size:.74rem;font-weight:700;color:'+(up?'var(--emer)':'var(--red)')},(up?'+':'')+pct(r.r)),
+          el('div',{class:'barpair'},el('div',{class:'bar ret'+(up?'':' dn'),style:`height:${h}px`,title:pct(r.r)})),
+          el('div',{class:'barlabel'},String(r.year+543))));
+      });
+      vc.append(rchart);
+    }else{
+      vc.append(el('div',{class:'field-help',style:'margin-top:10px'},'ต้องมีมูลค่าสิ้นปีอย่างน้อย 1 ปี เพื่อคำนวณผลตอบแทนรายปี'));
+    }
+    p.append(vc);
+  }
+
+  /* ---- AM vs GM รายสินทรัพย์ ---- */
+  const ac=el('div',{class:'card'});
+  ac.append(el('div',{class:'card-h'},el('h2',{},'ผลตอบแทนรายสินทรัพย์ · AM vs GM')));
+  const tb=el('table',{class:'amgm-table'});
+  tb.append(el('thead',{},el('tr',{},el('th',{},'สินทรัพย์'),el('th',{style:'text-align:right'},'มูลค่าปัจจุบัน'),
+    el('th',{style:'text-align:right'},'ผลตอบแทนรวม'),el('th',{style:'text-align:right'},'AM/ปี'),
+    el('th',{style:'text-align:right'},'GM/ปี'),el('th',{style:'text-align:right'},'ปีที่มีข้อมูล'))));
+  const tbody=el('tbody',{});
+  const pill=v=>v==null?el('span',{class:'pill na'},'—'):el('span',{class:'pill '+(v>=0?'pos':'neg')},(v>=0?'+':'')+pct(v));
+  series.forEach(x=>{const s=x.s,iv=x.iv;
+    tbody.append(el('tr',{},
+      el('td',{},el('div',{class:'t-title'},iv.asset_name||'-'),el('div',{class:'t-sub'},ASSET_LABEL[iv.asset_type]||'สินทรัพย์')),
+      el('td',{style:'text-align:right;font-weight:700'},money(s.latest)),
+      el('td',{style:'text-align:right'},pill(s.totRet)),
+      el('td',{style:'text-align:right'},pill(s.am)),
+      el('td',{style:'text-align:right'},pill(s.gm)),
+      el('td',{style:'text-align:right;color:var(--muted)'},String(s.n))));
+  });
+  tb.append(tbody);ac.append(tb);p.append(ac);
+
+  /* ---- สัดส่วนการจัดสรรพอร์ต ---- */
+  const alloc={};
+  series.forEach(x=>{const k=x.iv.asset_type||'other';alloc[k]=(alloc[k]||0)+x.s.latest;});
+  const allocRows=Object.entries(alloc).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(allocRows.length){
+    const alTot=allocRows.reduce((t,[,v])=>t+v,0)||1;
+    const cc=el('div',{class:'card'});
+    cc.append(el('div',{class:'card-h'},el('h2',{},'สัดส่วนการจัดสรรพอร์ต')));
+    allocRows.forEach(([k,v],i)=>{cc.append(el('div',{class:'hbar'},
+      el('div',{class:'hl'},ASSET_LABEL[k]||k),
+      el('div',{class:'hbar-track'},el('div',{class:'hbar-fill',style:`width:${(v/alTot*100).toFixed(1)}%;background:${PERF_PAL[i%PERF_PAL.length]}`})),
+      el('div',{class:'hv'},pct(v/alTot)+' · '+money(v))));});
+    p.append(cc);
+  }
+
+  /* ---- รายการสินทรัพย์ + บันทึกมูลค่าสิ้นปี ---- */
   const lc=el('div',{class:'card'});
-  lc.append(el('div',{class:'card-h'},el('h2',{},'รายการสินทรัพย์ลงทุน')));
-  if(!list.length)lc.append(emptyBox('ยังไม่มีการลงทุน'));
-  else list.forEach(iv=>{
-    const r=investCalc(iv);
+  lc.append(el('div',{class:'card-h'},el('h2',{},'รายการสินทรัพย์ & บันทึกมูลค่าสิ้นปี')));
+  series.forEach(x=>{const iv=x.iv,s=x.s;
     const card=el('div',{class:'loancard'});
     card.append(el('div',{class:'lc-top'},
       el('div',{style:'min-width:0'},el('div',{class:'lc-name'},iv.asset_name||'-'),
         el('div',{class:'hl'},el('span',{class:'chip c-invest'},ASSET_LABEL[iv.asset_type]||'สินทรัพย์'),
-          iv.units?el('span',{class:'chip c-neutral'},'จำนวน '+iv.units+' หน่วย'):'' )),
-      el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openInvestmentModal(iv)},'แก้ไข')));
+          iv.units?el('span',{class:'chip c-neutral'},'จำนวน '+iv.units+' หน่วย'):'',
+          el('span',{class:'chip c-neutral'},'ซื้อ '+fmtDate(iv.buy_date))) ),
+      el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},
+        el('button',{class:'btn btn-gold btn-sm',html:svg(I.plus)+'บันทึกค่าสิ้นปี',onclick:()=>openYearEndModal(iv)}),
+        el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openInvestmentModal(iv)},'แก้ไข'))));
     const g=el('div',{class:'dgrid'});
     const cell=(lab,val,cls='')=>el('div',{class:'dcell '+cls},el('div',{class:'l'},lab),el('div',{class:'v'+(String(val).length>12?' sm':'')},val));
-    g.append(cell('ราคา ณ วันซื้อ',money(r.buy)+' ฿'));
-    g.append(cell('ค่าธรรมเนียม',money(r.fee)+' ฿ ('+pct(r.feePct)+' ของเงินต้น)'));
-    g.append(cell('ต้นทุนรวม',money(r.cost)+' ฿'));
-    g.append(cell('มูลค่าปัจจุบัน',money(r.cur)+' ฿',r.gain>=0?'pos':'neg'));
-    g.append(cell('กำไร/ขาดทุน',(r.gain>=0?'+':'')+money(r.gain)+' ฿',r.gain>=0?'pos':'neg'));
-    g.append(cell('ผลตอบแทนรวม',pct(r.totRet),r.totRet>=0?'pos':'neg'));
-    g.append(cell('AM (ต่อปี)',pct(r.am),r.am>=0?'pos':'neg'));
-    g.append(cell('GM / CAGR (ต่อปี)',pct(r.gm),r.gm>=0?'pos':'neg'));
+    const gain=s.latest-s.cost;
+    g.append(cell('ต้นทุนรวม',money(s.cost)+' ฿'));
+    g.append(cell('มูลค่าปัจจุบัน',money(s.latest)+' ฿',gain>=0?'pos':'neg'));
+    g.append(cell('กำไร/ขาดทุน',(gain>=0?'+':'')+money(gain)+' ฿',gain>=0?'pos':'neg'));
+    g.append(cell('ผลตอบแทนรวม',pct(s.totRet),s.totRet>=0?'pos':'neg'));
+    g.append(cell('AM (ต่อปี)',s.am==null?'—':pct(s.am),s.am==null?'':(s.am>=0?'pos':'neg')));
+    g.append(cell('GM / CAGR (ต่อปี)',s.gm==null?'—':pct(s.gm),s.gm==null?'':(s.gm>=0?'pos':'neg')));
     card.append(g);
-    card.append(el('div',{class:'t-sub'},`ซื้อเมื่อ ${fmtDate(iv.buy_date)} · ราคาอ้างอิง ณ ${fmtDate(iv.current_date||todayISO())} · ถือครอง ${r.yrs.toFixed(2)} ปี`+(iv.note?' · '+iv.note:'')));
+    const hist=el('div',{style:'margin-top:4px'});
+    hist.append(el('div',{style:'font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px'},'ประวัติมูลค่าสิ้นปี'));
+    if(!s.logs.length)hist.append(el('div',{class:'field-help'},'ยังไม่มีบันทึก — กด “บันทึกค่าสิ้นปี” เพื่อเริ่มเก็บผลตอบแทนรายปี'));
+    else s.logs.forEach(l=>{const rr=s.rets.find(z=>z.year===l.year);
+      hist.append(el('div',{class:'yrrow'},
+        el('span',{class:'yt'},String(l.year+543)),
+        el('span',{class:'yv'},money(l.value)+' ฿'),
+        el('span',{class:'yr'},rr?el('span',{class:'pill '+(rr.r>=0?'pos':'neg')},(rr.r>=0?'+':'')+pct(rr.r)):el('span',{class:'pill na'},'—')),
+        el('button',{class:'btn btn-ghost btn-sm',style:'flex:0 0 auto',onclick:()=>openYearEndModal(iv,l)},'แก้ไข')));
+    });
+    card.append(hist);
+    if(iv.note)card.append(el('div',{class:'t-sub',style:'margin-top:8px'},iv.note));
     lc.append(card);
   });
   p.append(lc);
@@ -1459,6 +1694,51 @@ function openInvestmentModal(existing){
   }},'บันทึก'));m.append(foot);showModal(bg);
 }
 
+/* ===== MODAL: บันทึกมูลค่าสิ้นปี ===== */
+async function openYearEndModal(iv,existing){
+  const nowY=new Date().getFullYear();
+  let logs=[];
+  try{const all=await Store.list('investment_values');logs=all.filter(v=>v.investment_id===iv.id).map(v=>({id:v.id,year:Number(v.year),value:+v.value})).sort((a,b)=>a.year-b.year);}catch(e){logs=[];}
+  const cost=investCalc(iv).cost;
+  const buyY=yrOf(iv.buy_date)||nowY;
+  const x=existing||{year:nowY,value:'',note:''};
+  const {bg,m}=modal(existing?'แก้ไขมูลค่าสิ้นปี':'บันทึกมูลค่า ณ สิ้นปี',iv.asset_name||'');
+  const body=el('div',{class:'modal-body'});
+  const yearSel=el('select',{});
+  for(let y=nowY;y>=buyY;y--){const o=el('option',{value:y},String(y+543)+' ('+y+')');if(Number(x.year)===y)o.selected=true;yearSel.append(o);}
+  const valInput=el('input',{type:'number',inputmode:'decimal',placeholder:'มูลค่าตลาด ณ 31 ธ.ค.',value:x.value||''});
+  const note=el('input',{type:'text',placeholder:'หมายเหตุ (ไม่บังคับ)',value:x.note||''});
+  const preview=el('div',{class:'metric-note'},'');
+  function baseFor(year){const prior=logs.filter(l=>l.year<year&&(!existing||l.id!==existing.id));return prior.length?prior[prior.length-1].value:cost;}
+  function upd(){
+    const y=Number(yearSel.value),v=Number(valInput.value||0),base=baseFor(y);
+    const r=base>0?v/base-1:0;
+    const label=logs.some(l=>l.year<y&&(!existing||l.id!==existing.id))?'ปีก่อนหน้า':'ต้นทุนรวม';
+    preview.innerHTML=v>0?`เทียบ${label} <b>${money(base)}</b> ฿ · ผลตอบแทนปีนี้ <b style="color:${r>=0?'var(--emer)':'var(--red)'}">${(r>=0?'+':'')+pct(r)}</b>`:'กรอกมูลค่าเพื่อดูผลตอบแทนโดยประมาณ';
+  }
+  [yearSel,valInput].forEach(i=>i.addEventListener('input',upd));
+  body.append(
+    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'ปี (สิ้นปี)'),yearSel),el('div',{class:'fld'},el('label',{},'มูลค่า ณ สิ้นปี (บาท)'),valInput)),
+    el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note),
+    el('div',{class:'fld'},el('label',{},'ผลตอบแทนโดยประมาณ'),preview));
+  upd();m.append(body);
+  const foot=el('div',{class:'modal-foot'});
+  if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบมูลค่าปีนี้?')){try{await Store.remove('investment_values',existing.id);toast('ลบแล้ว');closeModal();render();}catch(e){toast('ลบไม่สำเร็จ: '+(e.message||e));}}}},'ลบ'));
+  foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),el('button',{class:'btn btn-dark',onclick:async()=>{
+    const v=Number(valInput.value||0);
+    if(!v){toast('กรุณาใส่มูลค่า');return;}
+    const payload={investment_id:iv.id,year:Number(yearSel.value),value:v,note:note.value.trim(),created_by:App.user.username};
+    try{
+      const dup=logs.find(l=>l.year===payload.year&&(!existing||l.id!==existing.id));
+      if(dup)await Store.update('investment_values',dup.id,payload);
+      else if(existing)await Store.update('investment_values',existing.id,payload);
+      else await Store.insert('investment_values',payload);
+      toast('บันทึกแล้ว');closeModal();render();
+    }catch(e){toast('บันทึกไม่สำเร็จ — ตรวจสอบตาราง investment_values บนคลาวด์');}
+  }},'บันทึก'));
+  m.append(foot);showModal(bg);
+}
+
 /* ===== MODAL: ค้ำประกัน ===== */
 function openGuaranteeModal(existing){
   const x=existing||{beneficiary:'',guarantee_type:'name',asset_desc:'',facility_amount:'',fee_type:'percent',fee_rate:'',fee_amount:'',start_date:todayISO(),end_date:'',status:'active',note:''};
@@ -1565,8 +1845,38 @@ async function renderSettings(p){
   p.append(uc);
 
   const lc=el('div',{class:'card'});
-  lc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'การแจ้งเตือน'),el('h2',{},'แจ้งเตือนรายจ่ายผ่าน LINE')),el('span',{class:'badge-mode '+(USE_CLOUD?'badge-cloud':'badge-local')},USE_CLOUD?'พร้อมตั้งค่า':'ต้องเชื่อมคลาวด์ก่อน')));
-  lc.append(el('div',{class:'t-sub',style:'line-height:1.7'},'ระบบจะส่งสรุปรายจ่ายที่ครบกำหนดภายใน '+REMIND_DAYS+' วันและยังไม่ได้จ่าย ไปที่ LINE ของ Owner อัตโนมัติทุกเช้า ตั้งค่าครั้งเดียวบน Supabase (ดูไฟล์คู่มือ “LINE_NOTIFY_SETUP”)'));
+  lc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'การแจ้งเตือน'),el('h2',{},'แจ้งเตือนรายจ่าย (ในโปรแกรม + LINE)')),el('span',{class:'badge-mode '+(USE_CLOUD?'badge-cloud':'badge-local')},USE_CLOUD?'ซิงก์กับ LINE':'เฉพาะในโปรแกรม')));
+  // ช่องกรอกจำนวนวันล่วงหน้า
+  const daysInp=el('input',{type:'number',min:'0',max:'60',value:String(Settings.remind_days)});
+  // ข้อความพิมพ์เอง
+  const msgInp=el('textarea',{placeholder:'เช่น อย่าลืมโอนจ่ายบิลด้วยนะคะ 😊 (เว้นว่าง = ใช้ข้อความมาตรฐาน)'});
+  msgInp.value=Settings.reminder_message||'';
+  // ปุ่มสลับตัวเลือก LINE
+  let sendEmpty=Settings.send_when_empty;
+  const emptyBtn=el('button',{class:'pchip'+(sendEmpty?' sel':''),onclick:()=>{sendEmpty=!sendEmpty;emptyBtn.className='pchip'+(sendEmpty?' sel':'');emptyBtn.textContent=sendEmpty?'✓ ส่งทุกวันแม้ไม่มีรายการค้าง':'ส่งเฉพาะเมื่อมีรายการค้าง';}},sendEmpty?'✓ ส่งทุกวันแม้ไม่มีรายการค้าง':'ส่งเฉพาะเมื่อมีรายการค้าง');
+  let lineOn=Settings.line_enabled;
+  const lineBtn=el('button',{class:'pchip'+(lineOn?' sel':''),onclick:()=>{lineOn=!lineOn;lineBtn.className='pchip'+(lineOn?' sel':'');lineBtn.textContent=lineOn?'✓ เปิดแจ้งเตือน LINE':'ปิดแจ้งเตือน LINE';}},lineOn?'✓ เปิดแจ้งเตือน LINE':'ปิดแจ้งเตือน LINE');
+  lc.append(
+    el('div',{class:'fld'},el('label',{},'แจ้งล่วงหน้ากี่วันก่อนครบกำหนด'),daysInp,
+      el('div',{class:'field-help'},'ใช้ทั้งการแจ้งเตือนในหน้าแดชบอร์ด และสรุปที่ส่งเข้า LINE ทุกเช้า (กรอก 0 = เฉพาะที่ครบกำหนดวันนี้/เลยกำหนด)')),
+    el('div',{class:'fld'},el('label',{},'ข้อความแจ้งเตือน (พิมพ์เอง)'),msgInp,
+      el('div',{class:'field-help'},'ข้อความนี้จะขึ้นเป็นหัวข้อความแจ้งเตือนทั้งในแอปและ LINE · เว้นว่างไว้จะใช้ข้อความมาตรฐาน')));
+  if(USE_CLOUD)lc.append(el('div',{class:'fld'},el('label',{},'ตัวเลือกการส่ง LINE'),el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},emptyBtn,lineBtn)));
+  const actions=el('div',{style:'display:flex;gap:10px;flex-wrap:wrap;margin-top:2px'});
+  actions.append(el('button',{class:'btn btn-dark',html:svg(I.check)+'บันทึกการตั้งค่า',onclick:async()=>{
+    const d=Number(daysInp.value);
+    if(!(d>=0&&d<=60)){toast('กรุณาใส่จำนวนวัน 0–60');return;}
+    try{await saveSettings({remind_days:d,reminder_message:msgInp.value.trim(),send_when_empty:sendEmpty,line_enabled:lineOn});toast('บันทึกการตั้งค่าแล้ว');renderSettings(p);}
+    catch(e){toast('บันทึกในแอปแล้ว แต่ซิงก์ LINE ไม่สำเร็จ — ยังไม่ได้ติดตั้งไฟล์ LINE (ดูคู่มือ)');}
+  }},'บันทึกการตั้งค่า'));
+  if(USE_CLOUD)actions.append(el('button',{class:'btn btn-ghost',onclick:async()=>{
+    try{const {error}=await sb.rpc('fc_line_send_now');if(error)throw error;toast('ส่งข้อความทดสอบเข้า LINE แล้ว');}
+    catch(e){toast('ส่งไม่สำเร็จ — ตรวจสอบว่าติดตั้งไฟล์ LINE บน Supabase แล้ว');}
+  }},'ส่งทดสอบเข้า LINE'));
+  lc.append(actions);
+  lc.append(el('div',{class:'field-help',style:'margin-top:14px;line-height:1.7'},USE_CLOUD
+    ?'การตั้งค่านี้จะซิงก์ไปที่ LINE โดยอัตโนมัติ · ต้องติดตั้งไฟล์ “line_notify_v2.sql” บน Supabase หนึ่งครั้งก่อน (ดูคู่มือ LINE_SETUP) · หลังจากนั้นระบบส่งสรุปรายจ่ายเข้า LINE ให้เองทุกเช้า 07:00 น.'
+    :'ตอนนี้อยู่โหมดทดลอง (เก็บในเครื่อง) — การตั้งค่าใช้กับการแจ้งเตือนในแอปเท่านั้น ยังไม่ส่ง LINE'));
   p.append(lc);
 
   p.append(el('div',{class:'card'},el('button',{class:'btn btn-ghost btn-block',onclick:logout},'ออกจากระบบ')));
