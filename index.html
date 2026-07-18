@@ -403,7 +403,8 @@ const TH_MF=['มกราคม','กุมภาพันธ์','มีนา
 const TH_D=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 const REMIND_DAYS=3; // ค่าเริ่มต้น (จำนวนวันแจ้งล่วงหน้า) ใช้เมื่อยังไม่ได้ตั้งค่าเอง
 // การตั้งค่าแจ้งเตือน — โหลดจากคลาวด์ (LINE) หรือเครื่อง แล้วใช้ทั้งในแอปและ LINE ให้ตรงกัน
-const Settings={remind_days:REMIND_DAYS,reminder_message:'',send_when_empty:false,line_enabled:true};
+const Settings={remind_days:REMIND_DAYS,reminder_message:'',send_when_empty:false,line_enabled:true,
+  show_date:true,show_divider:true,show_business:false,show_total:true,compact:true};
 const EXPENSE_SUGGEST=['ค่าน้ำ','ค่าไฟ','เงินเดือนพนักงาน','เงินเดือนแม่บ้าน','ค่าซื้อของ/วัตถุดิบ','ค่าผ่อนรถ','ค่าน้ำมัน','ค่าบำรุงรักษา','ค่าอินเทอร์เน็ต','ค่าเช่า','ภาษี/ค่าธรรมเนียม','อื่น ๆ'];
 const INCOME_SUGGEST=['ค่าเช่าห้อง','ค่าเช่าตึก','เงินเดือน','รายได้ซักรีด','รายได้คลีนนิ่ง','รายได้ขายบ้าน','ค่าน้ำ/ค่าไฟจากผู้เช่า','อื่น ๆ'];
 const BANK_SUGGEST=['กสิกรไทย','ไทยพาณิชย์ (SCB)','กรุงเทพ (BBL)','กรุงไทย (KTB)','กรุงศรี (BAY)','ทีทีบี (ttb)','เงินสด'];
@@ -472,6 +473,11 @@ async function loadSettings(){
         Settings.reminder_message=data.custom_message||'';
         Settings.send_when_empty=!!data.send_when_empty;
         Settings.line_enabled=data.enabled!==false;
+        Settings.show_date=data.show_date!==false;
+        Settings.show_divider=data.show_divider!==false;
+        Settings.show_business=!!data.show_business;
+        Settings.show_total=data.show_total!==false;
+        Settings.compact=data.compact!==false;
       }
     }else{
       const s=JSON.parse(localStorage.getItem('fc_settings')||'null');
@@ -480,6 +486,11 @@ async function loadSettings(){
         Settings.reminder_message=s.reminder_message||'';
         Settings.send_when_empty=!!s.send_when_empty;
         Settings.line_enabled=s.line_enabled!==false;
+        Settings.show_date=s.show_date!==false;
+        Settings.show_divider=s.show_divider!==false;
+        Settings.show_business=!!s.show_business;
+        Settings.show_total=s.show_total!==false;
+        Settings.compact=s.compact!==false;
       }
     }
   }catch(e){/* ยังไม่ได้ติดตั้ง LINE — ใช้ค่าเริ่มต้น */}
@@ -491,20 +502,55 @@ async function saveSettings(vals){
   Settings.reminder_message=vals.reminder_message||'';
   Settings.send_when_empty=!!vals.send_when_empty;
   Settings.line_enabled=vals.line_enabled!==false;
+  Settings.show_date=vals.show_date!==false;
+  Settings.show_divider=vals.show_divider!==false;
+  Settings.show_business=!!vals.show_business;
+  Settings.show_total=vals.show_total!==false;
+  Settings.compact=vals.compact!==false;
   if(USE_CLOUD){
     const {error}=await sb.rpc('fc_set_line_settings',{
       p_remind_days:Settings.remind_days,
       p_custom_message:Settings.reminder_message,
       p_send_when_empty:Settings.send_when_empty,
-      p_enabled:Settings.line_enabled
+      p_enabled:Settings.line_enabled,
+      p_show_date:Settings.show_date,
+      p_show_divider:Settings.show_divider,
+      p_show_business:Settings.show_business,
+      p_show_total:Settings.show_total,
+      p_compact:Settings.compact
     });
     if(error)throw error;
   }else{
     localStorage.setItem('fc_settings',JSON.stringify({
       remind_days:Settings.remind_days,reminder_message:Settings.reminder_message,
-      send_when_empty:Settings.send_when_empty,line_enabled:Settings.line_enabled
+      send_when_empty:Settings.send_when_empty,line_enabled:Settings.line_enabled,
+      show_date:Settings.show_date,show_divider:Settings.show_divider,
+      show_business:Settings.show_business,show_total:Settings.show_total,compact:Settings.compact
     }));
   }
+}
+// สร้างข้อความ LINE ตามรูปแบบที่ตั้งไว้ (ให้ตรงกับฝั่ง Supabase เป๊ะ) ใช้ทำพรีวิวในเว็บ
+const LINE_DIV='━━━━━━━━━━━━';
+const fmtBaht=n=>Math.round(Number(n||0)).toLocaleString('en-US');
+function buildLineMessage(s,items,today){
+  today=today||new Date();
+  const head=(s.reminder_message&&s.reminder_message.trim())?s.reminder_message.trim():'🔔 แจ้งเตือนรายจ่าย';
+  let msg=head+(s.show_date?` (${today.getDate()} ${TH_M[today.getMonth()]})`:'');
+  if(s.show_divider)msg+='\n'+LINE_DIV;
+  if(!items.length){msg+='\n✅ ไม่มีรายจ่ายค้างจ่าย';return msg;}
+  let total=0;
+  items.forEach(r=>{total+=Number(r.amount||0);
+    const bp=s.show_business?(' — '+(r.biz||'—')):'';
+    const when=r.dleft<0?('เลย '+Math.abs(r.dleft)+' วัน'):r.dleft===0?'วันนี้':('อีก '+r.dleft+' วัน');
+    if(s.compact){
+      msg+='\n• '+r.category+bp+' · '+fmtBaht(r.amount)+' บาท · '+when;
+    }else{
+      const dd=r.txn_date?new Date(r.txn_date+'T00:00:00'):today;
+      msg+='\n• '+r.category+bp+'\n   '+Number(r.amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' บาท · กำหนด '+dd.getDate()+' '+TH_M[dd.getMonth()]+' ('+when+')';
+    }
+  });
+  if(s.show_total){if(s.show_divider)msg+='\n'+LINE_DIV;msg+='\nรวม '+items.length+' รายการ · '+fmtBaht(total)+' บาท';}
+  return msg;
 }
 
 /* ---------- state & helpers ---------- */
@@ -1851,6 +1897,26 @@ async function renderSettings(p){
   // ข้อความพิมพ์เอง
   const msgInp=el('textarea',{placeholder:'เช่น อย่าลืมโอนจ่ายบิลด้วยนะคะ 😊 (เว้นว่าง = ใช้ข้อความมาตรฐาน)'});
   msgInp.value=Settings.reminder_message||'';
+  // ---- รูปแบบข้อความ + พรีวิวสด (ปรับได้จากเว็บ เห็นผลทันที) ----
+  const fmt={show_date:Settings.show_date,show_divider:Settings.show_divider,show_business:Settings.show_business,show_total:Settings.show_total,compact:Settings.compact};
+  let previewItems=[];
+  try{
+    const txAll=await Store.list('transactions');
+    const bmap=Object.fromEntries(bizAll.map(b=>[b.id,b.name]));
+    previewItems=txAll.filter(t=>t.kind==='expense'&&!t.is_paid&&daysUntil(t.txn_date)<=Settings.remind_days)
+      .sort((a,b)=>(a.txn_date||'').localeCompare(b.txn_date||''))
+      .map(t=>({category:t.category||'รายจ่าย',biz:bmap[t.business_id]||'—',amount:t.amount,dleft:daysUntil(t.txn_date),txn_date:t.txn_date}));
+  }catch(e){}
+  const usingSample=!previewItems.length;
+  if(usingSample)previewItems=[
+    {category:'ค่าน้ำ',biz:'ซักรีด',amount:1200,dleft:2,txn_date:null},
+    {category:'เงินเดือนพนักงาน',biz:'คลีนนิ่ง',amount:18000,dleft:0,txn_date:null}
+  ];
+  const previewBox=el('pre',{style:'white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:.92rem;line-height:1.55;margin:0;background:#eaf6ea;border:1px solid #cfe6cf;border-left:3px solid #06c755;border-radius:12px;padding:14px 16px;color:#14321f'});
+  const refreshPreview=()=>{previewBox.textContent=buildLineMessage({reminder_message:msgInp.value,show_date:fmt.show_date,show_divider:fmt.show_divider,show_business:fmt.show_business,show_total:fmt.show_total,compact:fmt.compact},previewItems);};
+  msgInp.addEventListener('input',refreshPreview);
+  const fmtChip=(key,label)=>{const b=el('button',{class:'pchip'+(fmt[key]?' sel':''),onclick:()=>{fmt[key]=!fmt[key];b.className='pchip'+(fmt[key]?' sel':'');refreshPreview();}},label);return b;};
+  const compactSeg=segControl([['1','กระชับ (รายการละบรรทัด)'],['0','ละเอียด (2 บรรทัด)']],fmt.compact?'1':'0',v=>{fmt.compact=(v==='1');refreshPreview();});
   // ปุ่มสลับตัวเลือก LINE
   let sendEmpty=Settings.send_when_empty;
   const emptyBtn=el('button',{class:'pchip'+(sendEmpty?' sel':''),onclick:()=>{sendEmpty=!sendEmpty;emptyBtn.className='pchip'+(sendEmpty?' sel':'');emptyBtn.textContent=sendEmpty?'✓ ส่งทุกวันแม้ไม่มีรายการค้าง':'ส่งเฉพาะเมื่อมีรายการค้าง';}},sendEmpty?'✓ ส่งทุกวันแม้ไม่มีรายการค้าง':'ส่งเฉพาะเมื่อมีรายการค้าง');
@@ -1861,12 +1927,24 @@ async function renderSettings(p){
       el('div',{class:'field-help'},'ใช้ทั้งการแจ้งเตือนในหน้าแดชบอร์ด และสรุปที่ส่งเข้า LINE ทุกเช้า (กรอก 0 = เฉพาะที่ครบกำหนดวันนี้/เลยกำหนด)')),
     el('div',{class:'fld'},el('label',{},'ข้อความแจ้งเตือน (พิมพ์เอง)'),msgInp,
       el('div',{class:'field-help'},'ข้อความนี้จะขึ้นเป็นหัวข้อความแจ้งเตือนทั้งในแอปและ LINE · เว้นว่างไว้จะใช้ข้อความมาตรฐาน')));
+  // รูปแบบข้อความ LINE (ปรับได้เอง)
+  lc.append(el('div',{class:'fld'},el('label',{},'รูปแบบข้อความ LINE'),
+    el('div',{style:'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px'},
+      fmtChip('show_date','วันที่'),fmtChip('show_divider','เส้นคั่น'),fmtChip('show_business','ชื่อธุรกิจ'),fmtChip('show_total','ยอดรวม')),
+    compactSeg,
+    el('div',{class:'field-help',style:'margin-top:8px'},'ติ๊กเลือกสิ่งที่อยากให้แสดง แล้วดูผลได้จากตัวอย่างด้านล่างทันที')));
+  // ตัวอย่างข้อความจริง (พรีวิวสด)
+  lc.append(el('div',{class:'fld'},
+    el('label',{},'ตัวอย่างข้อความที่จะส่งเข้า LINE'+(usingSample?' (ข้อมูลตัวอย่าง)':' (จากรายการค้างจริง)')),
+    previewBox,
+    el('div',{class:'field-help',style:'margin-top:6px'},'พรีวิวนี้อัปเดตตามที่คุณพิมพ์และติ๊ก · กด “บันทึกการตั้งค่า” เพื่อให้มีผลกับ LINE จริง')));
+  refreshPreview();
   if(USE_CLOUD)lc.append(el('div',{class:'fld'},el('label',{},'ตัวเลือกการส่ง LINE'),el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},emptyBtn,lineBtn)));
   const actions=el('div',{style:'display:flex;gap:10px;flex-wrap:wrap;margin-top:2px'});
   actions.append(el('button',{class:'btn btn-dark',html:svg(I.check)+'บันทึกการตั้งค่า',onclick:async()=>{
     const d=Number(daysInp.value);
     if(!(d>=0&&d<=60)){toast('กรุณาใส่จำนวนวัน 0–60');return;}
-    try{await saveSettings({remind_days:d,reminder_message:msgInp.value.trim(),send_when_empty:sendEmpty,line_enabled:lineOn});toast('บันทึกการตั้งค่าแล้ว');renderSettings(p);}
+    try{await saveSettings({remind_days:d,reminder_message:msgInp.value.trim(),send_when_empty:sendEmpty,line_enabled:lineOn,show_date:fmt.show_date,show_divider:fmt.show_divider,show_business:fmt.show_business,show_total:fmt.show_total,compact:fmt.compact});toast('บันทึกการตั้งค่าแล้ว');renderSettings(p);}
     catch(e){toast('บันทึกในแอปแล้ว แต่ซิงก์ LINE ไม่สำเร็จ — ยังไม่ได้ติดตั้งไฟล์ LINE (ดูคู่มือ)');}
   }},'บันทึกการตั้งค่า'));
   if(USE_CLOUD)actions.append(el('button',{class:'btn btn-ghost',onclick:async()=>{
