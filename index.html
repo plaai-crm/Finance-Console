@@ -9,63 +9,67 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#eef1f6; --panel:#ffffff; --ink:#16223f; --muted:#6b7488; --faint:#98a1b3;
-    --line:#e5e8ef; --line-strong:#d3d8e2;
-    --navy:#16223f; --navy-2:#243458; --navy-soft:#e9edf7;
-    --sidebar:#111c33; --sidebar-2:#1b2947; --sidebar-line:#2a3a5c; --sidebar-mut:#95a3c2;
-    --gold:#c2a15a; --gold-2:#d8bd82; --gold-soft:#f4eede;
-    --emer:#0f7a53; --emer-soft:#e7f2ec;
-    --red:#bb4034; --red-soft:#f9ebe9;
-    --amber:#b7791f; --amber-soft:#fbf3e2; --amber-line:#efd9a8;
-    --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.06);
-    --radius:14px;
+    --bg:#e9ebf0; --panel:#ffffff; --ink:#111b33; --muted:#616b81; --faint:#949db1;
+    --line:#e6e8ef; --line-strong:#d2d7e1;
+    --navy:#152341; --navy-2:#22345c; --navy-soft:#e8ecf6;
+    --sidebar:#0b1424; --sidebar-2:#152340; --sidebar-line:#25344f; --sidebar-mut:#8f9db9;
+    --gold:#b18f4e; --gold-2:#d4b878; --gold-soft:#f2ecdd;
+    --emer:#0d6f4c; --emer-soft:#e6f1eb;
+    --red:#b23a2f; --red-soft:#f8eae8;
+    --amber:#a86f1c; --amber-soft:#faf1de; --amber-line:#ecd6a2;
+    --shadow:0 1px 2px rgba(17,27,51,.04),0 14px 34px -12px rgba(17,27,51,.14);
+    --shadow-lg:0 1px 3px rgba(17,27,51,.05),0 24px 50px -16px rgba(17,27,51,.22);
+    --radius:12px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
-  body{font-family:'Sarabun',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  body{font-family:'Sarabun',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
   h1,h2,h3,h4{margin:0}
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-  input,select,textarea{font-family:inherit;font-size:1rem;padding:12px 14px;border:1px solid var(--line-strong);border-radius:10px;width:100%;background:#fff;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+  input,select,textarea{font-family:inherit;font-size:1rem;padding:12px 14px;border:1px solid var(--line-strong);border-radius:9px;width:100%;background:#fff;color:var(--ink);transition:border-color .18s,box-shadow .18s}
   textarea{min-height:84px;resize:vertical;line-height:1.5}
-  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px var(--navy-soft)}
-  label{display:block;font-size:.82rem;font-weight:600;color:var(--muted);margin:0 0 6px;letter-spacing:.01em}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+  label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:0 0 6px;letter-spacing:.01em}
   .hidden{display:none!important}
-  .serif{font-family:'Cormorant Garamond',serif}
+  .serif{font-family:'Cormorant Garamond',serif;letter-spacing:.005em}
   .mono-num{font-variant-numeric:tabular-nums}
-  ::selection{background:var(--navy-soft)}
+  ::selection{background:var(--gold-soft)}
 
   /* ---------------- LOGIN ---------------- */
   #login{min-height:100vh;display:grid;grid-template-columns:1.1fr .9fr}
-  .login-brand{background:linear-gradient(160deg,#111c33 0%,#1e2f52 100%);color:#fff;padding:56px 52px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-  .login-brand::after{content:"";position:absolute;right:-120px;top:-120px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(194,161,90,.16),transparent 70%)}
-  .monogram{width:60px;height:60px;border:1.5px solid var(--gold);border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold-2);font-weight:700}
-  .login-brand h1{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:600;line-height:1.15;margin-top:26px;letter-spacing:.01em}
-  .login-brand .tag{color:var(--sidebar-mut);margin-top:14px;max-width:360px;font-weight:300;font-size:1.02rem}
-  .brand-foot{color:#5f6b7b;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}
+  .login-brand{background:linear-gradient(155deg,#0b1424 0%,#152640 55%,#1d3155 100%);color:#fff;padding:60px 56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+  .login-brand::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 15% 100%,rgba(177,143,78,.10),transparent 60%);pointer-events:none}
+  .login-brand::after{content:"";position:absolute;right:-140px;top:-120px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(212,184,120,.14),transparent 70%)}
+  .login-brand>*{position:relative;z-index:1}
+  .monogram{width:62px;height:62px;border:1px solid var(--gold);border-radius:13px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold-2);font-weight:700;box-shadow:inset 0 0 0 1px rgba(212,184,120,.18)}
+  .login-brand h1{font-family:'Cormorant Garamond',serif;font-size:2.85rem;font-weight:600;line-height:1.12;margin-top:28px;letter-spacing:.005em}
+  .login-brand .tag{color:#b9c4da;margin-top:16px;max-width:370px;font-weight:300;font-size:1.03rem;line-height:1.7}
+  .brand-foot{color:#6d7a90;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase}
   .login-form-wrap{display:flex;align-items:center;justify-content:center;padding:40px 32px;background:var(--panel)}
-  .login-form{width:100%;max-width:380px}
-  .login-form .eyebrow{font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700}
-  .login-form h2{font-size:1.5rem;margin:8px 0 4px;font-weight:700}
-  .login-form p{color:var(--muted);margin:0 0 26px;font-size:.95rem}
+  .login-form{width:100%;max-width:384px}
+  .login-form .eyebrow{font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .login-form h2{font-family:'Cormorant Garamond',serif;font-size:2rem;margin:10px 0 4px;font-weight:600;letter-spacing:.005em}
+  .login-form p{color:var(--muted);margin:0 0 28px;font-size:.95rem}
   .field{margin-bottom:16px}
-  .login-error{background:var(--red-soft);color:var(--red);border:1px solid #eecbc6;border-radius:10px;padding:10px 14px;font-size:.9rem;margin-bottom:16px}
-  .btn-primary{background:var(--navy);color:#fff;padding:14px 18px;border-radius:11px;font-weight:600;font-size:1rem;width:100%;letter-spacing:.02em;transition:transform .05s,background .15s}
-  .btn-primary:hover{background:var(--navy-2)}.btn-primary:active{transform:translateY(1px)}
-  .login-hint{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--faint);line-height:1.7}
+  .login-error{background:var(--red-soft);color:var(--red);border:1px solid #ecc9c4;border-radius:9px;padding:10px 14px;font-size:.9rem;margin-bottom:16px}
+  .btn-primary{background:var(--navy);color:#fff;padding:15px 18px;border-radius:10px;font-weight:600;font-size:1rem;width:100%;letter-spacing:.03em;transition:transform .06s,background .18s,box-shadow .18s;box-shadow:0 8px 20px -8px rgba(21,35,65,.5)}
+  .btn-primary:hover{background:var(--navy-2);box-shadow:0 12px 26px -8px rgba(21,35,65,.55)}.btn-primary:active{transform:translateY(1px)}
+  .login-hint{margin-top:24px;padding-top:20px;border-top:1px solid var(--line);font-size:.82rem;color:var(--faint);line-height:1.7}
 
   /* ---------------- SHELL ---------------- */
   .shell{display:flex;min-height:100vh}
-  aside.sidebar{width:256px;background:var(--sidebar);color:#fff;position:fixed;inset:0 auto 0 0;display:flex;flex-direction:column;padding:22px 16px;z-index:30}
-  .side-brand{display:flex;align-items:center;gap:12px;padding:6px 8px 20px;border-bottom:1px solid var(--sidebar-line)}
-  .side-brand .mg{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold-2);font-weight:700;flex:0 0 auto}
-  .side-brand .nm{font-family:'Cormorant Garamond',serif;font-size:1.28rem;font-weight:600;line-height:1.1}
-  .side-brand .sb{font-size:.68rem;color:var(--sidebar-mut);letter-spacing:.12em;text-transform:uppercase}
-  nav.side-nav{margin-top:16px;display:flex;flex-direction:column;gap:4px;flex:1}
-  .nav-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;color:var(--sidebar-mut);font-weight:500;font-size:.98rem;transition:background .15s,color .15s;text-align:left;width:100%}
-  .nav-item svg{width:20px;height:20px;flex:0 0 auto;stroke-width:1.7}
-  .nav-item:hover{background:var(--sidebar-2);color:#e9edf3}
+  aside.sidebar{width:258px;background:linear-gradient(180deg,#0b1424 0%,#0d1729 100%);color:#fff;position:fixed;inset:0 auto 0 0;display:flex;flex-direction:column;padding:24px 16px;z-index:30;border-right:1px solid #1a2740}
+  .side-brand{display:flex;align-items:center;gap:12px;padding:4px 8px 20px;border-bottom:1px solid var(--sidebar-line)}
+  .side-brand .mg{width:42px;height:42px;border:1px solid var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold-2);font-weight:700;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(212,184,120,.15)}
+  .side-brand .nm{font-family:'Cormorant Garamond',serif;font-size:1.34rem;font-weight:600;line-height:1.1}
+  .side-brand .sb{font-size:.66rem;color:var(--sidebar-mut);letter-spacing:.16em;text-transform:uppercase;margin-top:2px}
+  nav.side-nav{margin-top:18px;display:flex;flex-direction:column;gap:3px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:9px;color:var(--sidebar-mut);font-weight:500;font-size:.96rem;transition:background .18s,color .18s;text-align:left;width:100%}
+  .nav-item svg{width:19px;height:19px;flex:0 0 auto;stroke-width:1.6}
+  .nav-item:hover{background:rgba(255,255,255,.04);color:#e9edf3}
   .nav-item.active{background:var(--sidebar-2);color:#fff;position:relative}
-  .nav-item.active::before{content:"";position:absolute;left:-16px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)}
+  .nav-item.active svg{color:var(--gold-2)}
+  .nav-item.active::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)}
   .side-user{border-top:1px solid var(--sidebar-line);padding-top:14px;margin-top:8px}
   .side-user .u-row{display:flex;align-items:center;gap:11px}
   .avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#a5823f);color:#1a130a;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.98rem;flex:0 0 auto}
@@ -75,38 +79,38 @@
   .btn-signout:hover{background:var(--sidebar-2);color:#fff}
 
   main.content{margin-left:256px;flex:1;min-width:0;display:flex;flex-direction:column}
-  .topbar{background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:20}
-  .topbar .pg-title{font-size:1.3rem;font-weight:700;letter-spacing:-.01em}
-  .topbar .pg-sub{font-size:.84rem;color:var(--muted);margin-top:1px}
+  .topbar{background:rgba(255,255,255,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:18px 34px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:20}
+  .topbar .pg-title{font-family:'Cormorant Garamond',serif;font-size:1.65rem;font-weight:600;letter-spacing:.005em;line-height:1.1}
+  .topbar .pg-sub{font-size:.83rem;color:var(--muted);margin-top:2px}
   .topbar .clock{text-align:right;font-size:.84rem;color:var(--muted);line-height:1.4}
   .topbar .clock b{color:var(--ink);font-weight:600}
   .page{padding:28px 32px 60px;max-width:1180px;width:100%}
 
   /* ---------------- COMPONENTS ---------------- */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:22px}
-  .card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-  .card-h h2{font-size:1.08rem;font-weight:700;letter-spacing:-.01em}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 26px;margin-bottom:22px}
+  .card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .card-h h2{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:600;letter-spacing:.005em}
   .card-h .hint{font-size:.82rem;color:var(--muted)}
-  .section-eyebrow{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+  .section-eyebrow{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
 
-  .btn{padding:11px 16px;border-radius:10px;font-weight:600;font-size:.92rem;transition:.15s;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+  .btn{padding:11px 17px;border-radius:9px;font-weight:600;font-size:.92rem;transition:.18s;display:inline-flex;align-items:center;gap:8px;justify-content:center;letter-spacing:.01em}
   .btn svg{width:17px;height:17px;stroke-width:2}
-  .btn-dark{background:var(--navy);color:#fff}.btn-dark:hover{background:var(--navy-2)}
-  .btn-gold{background:var(--gold);color:#231a08}.btn-gold:hover{background:var(--gold-2)}
-  .btn-ghost{background:#f2f3f6;color:var(--ink);border:1px solid var(--line)}.btn-ghost:hover{background:#e9ebf0}
-  .btn-danger{background:var(--red-soft);color:var(--red);border:1px solid #eecbc6}.btn-danger:hover{background:#f4dcd8}
+  .btn-dark{background:var(--navy);color:#fff;box-shadow:0 8px 18px -10px rgba(21,35,65,.55)}.btn-dark:hover{background:var(--navy-2)}
+  .btn-gold{background:linear-gradient(180deg,#c3a563,#b18f4e);color:#231a08;box-shadow:0 8px 18px -10px rgba(177,143,78,.6)}.btn-gold:hover{background:linear-gradient(180deg,#d0b370,#bd9a55)}
+  .btn-ghost{background:#f1f2f6;color:var(--ink);border:1px solid var(--line)}.btn-ghost:hover{background:#e8eaf0}
+  .btn-danger{background:var(--red-soft);color:var(--red);border:1px solid #ecc9c4}.btn-danger:hover{background:#f4dad6}
   .btn-sm{padding:7px 12px;font-size:.82rem;border-radius:8px}
   .btn-block{width:100%}
   .row{display:flex;gap:12px}.row>*{flex:1}
 
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
-  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;position:relative;overflow:hidden}
-  .kpi .k{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .kpi .v{font-size:1.6rem;font-weight:700;margin-top:8px;letter-spacing:-.02em}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;position:relative;overflow:hidden}
+  .kpi .k{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .kpi .v{font-size:1.72rem;font-weight:700;margin-top:9px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
   .kpi .u{font-size:.9rem;color:var(--faint);font-weight:500}
   .kpi.pos .v{color:var(--emer)} .kpi.neg .v{color:var(--red)}
   .kpi .bar{position:absolute;left:0;top:0;bottom:0;width:3px}
-  .kpi.pos .bar{background:var(--emer)} .kpi.neg .bar{background:var(--red)} .kpi.gold .bar{background:var(--gold)} .kpi.ink .bar{background:var(--navy)}
+  .kpi.pos .bar{background:var(--emer)} .kpi.neg .bar{background:var(--red)} .kpi.gold .bar{background:linear-gradient(180deg,#d4b878,#b18f4e)} .kpi.ink .bar{background:var(--navy)}
 
   .table{width:100%;border-collapse:collapse}
   .table th{text-align:left;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:0 12px 10px;border-bottom:1px solid var(--line)}
@@ -159,9 +163,9 @@
 
   .modal-bg{position:fixed;inset:0;background:rgba(14,19,27,.45);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:60;animation:fade .15s}
   @keyframes fade{from{opacity:0}to{opacity:1}}
-  .modal{background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:92vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+  .modal{background:#fff;border-radius:14px;width:100%;max-width:480px;max-height:92vh;overflow:auto;box-shadow:var(--shadow-lg);border-top:3px solid var(--gold)}
   .modal-head{padding:22px 24px 0}
-  .modal-head h3{font-size:1.25rem;font-weight:700}
+  .modal-head h3{font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:600;letter-spacing:.005em}
   .modal-head p{color:var(--muted);font-size:.88rem;margin:4px 0 0}
   .modal-body{padding:18px 24px}
   .modal-foot{padding:16px 24px 22px;display:flex;gap:12px}
@@ -200,6 +204,43 @@
   .rate-badge{background:var(--gold-soft);color:#87641c;border-radius:8px;padding:3px 11px;font-weight:700;font-size:.82rem;white-space:nowrap}
   .link-open{color:var(--navy);font-weight:600;font-size:.85rem;text-decoration:none;white-space:nowrap}
   .link-open:hover{text-decoration:underline}
+
+  /* lending / investment / guarantee */
+  .c-loan{background:#eceffb;color:#3b4aa0}
+  .c-invest{background:var(--gold-soft);color:#87641c}
+  .c-secured{background:var(--emer-soft);color:var(--emer)}
+  .c-unsec{background:var(--amber-soft);color:var(--amber)}
+  .c-ext{background:#f3ecfb;color:#6b3fa0}
+  .c-affil{background:#eef0f4;color:var(--muted)}
+  .c-over{background:var(--red-soft);color:var(--red)}
+  .c-closed{background:#eef0f4;color:var(--muted)}
+  .c-active{background:var(--emer-soft);color:var(--emer)}
+  .loancard{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px 22px;margin-bottom:16px}
+  .loancard.over{border-color:#e7b7b0;border-left:3px solid var(--red)}
+  .loancard.closed{opacity:.72}
+  .lc-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .lc-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;letter-spacing:.005em}
+  .hl{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+  .dcell{background:#f8f9fb;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .dcell .l{font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  .dcell .v{font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;font-size:1.02rem}
+  .dcell .v.sm{font-size:.9rem}
+  .dcell.pos .v{color:var(--emer)} .dcell.neg .v{color:var(--red)} .dcell.gold .v{color:#87641c}
+  .prog-wrap{margin:6px 0 2px}
+  .prog{height:9px;background:#eef0f4;border-radius:6px;overflow:hidden}
+  .prog>span{display:block;height:100%;background:var(--emer);border-radius:6px;transition:width .3s}
+  .prog.over>span{background:var(--red)}
+  .prog-meta{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:6px;font-weight:600}
+  .lc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .alert-over{display:flex;align-items:center;gap:14px;padding:15px 18px;border:1px solid #e7b7b0;background:linear-gradient(90deg,var(--red-soft),#fff 92%);border-left:3px solid var(--red);border-radius:12px;margin-bottom:12px}
+  .alert-over .ao-ic{width:38px;height:38px;border-radius:10px;background:#fff;border:1px solid #e7b7b0;color:var(--red);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .alert-over .ao-ic svg{width:20px;height:20px}
+  .metric-note{font-size:.82rem;color:var(--muted);line-height:1.7;background:#f8f9fb;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:4px}
+  .logline{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+  .logline:last-child{border-bottom:none}
+  .logline .lt{font-size:.78rem;color:var(--faint);font-weight:600;white-space:nowrap;min-width:96px}
+  .owner-only-tag{font-size:.72rem;padding:3px 10px;border-radius:999px;font-weight:600;background:var(--navy-soft);color:var(--navy)}
 
   /* mobile bottom nav */
   .mobnav{display:none}
@@ -320,7 +361,12 @@ const I = {
   doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
   upload:'<path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/>',
   repeat:'<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
-  spark:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>'
+  spark:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',
+  alert:'<path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+  coin:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+  chart:'<path d="M3 3v18h18"/><path d="M7 15l3-4 3 2 4-6"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
 };
 const svg=(p,cls='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="${cls}">${p}</svg>`;
 
@@ -336,6 +382,11 @@ const DOC_TYPE_LABEL=Object.fromEntries(DOC_TYPES);
 const ROLE_LABEL={owner:'เจ้าของกิจการ (Owner)',staff:'ผู้บันทึกข้อมูล'};
 const SCOPE_LABEL={all:'ทุกธุรกิจ',general:'ทั่วไป (ยกเว้นโรงแรม)',hotel:'เฉพาะโรงแรม'};
 const MAX_FILE=4*1024*1024;
+const ASSET_TYPES=[['stock','หุ้น'],['gold','ทองคำ'],['fund','กองทุนรวม'],['crypto','คริปโต'],['bond','พันธบัตร/หุ้นกู้'],['property','อสังหาริมทรัพย์'],['other','อื่น ๆ']];
+const ASSET_LABEL=Object.fromEntries(ASSET_TYPES);
+const LOAN_STATUS=[['active','กำลังผ่อนชำระ'],['overdue','ค้างชำระ / เกินกำหนด'],['closed','ปิดสัญญาแล้ว']];
+const LOAN_STATUS_LABEL=Object.fromEntries(LOAN_STATUS);
+const FOLLOWUP_CHANNELS=['โทรศัพท์','LINE','อีเมล','จดหมาย/หนังสือทวงถาม','นัดพบ','ทนายความ','อื่น ๆ'];
 
 /* ---------- Data layer ---------- */
 const cfg=window.APP_CONFIG||{};
@@ -399,6 +450,57 @@ function scopedBusinesses(all){const a=all.filter(b=>b.active);const s=App.user.
 const isOwner=()=>App.user.role==='owner';
 const canLending=()=>isOwner()||App.user.scope==='general'; // owner + admin2
 
+/* ---------- finance calc helpers ---------- */
+function addMonths(iso,n){if(!iso)return null;const p=iso.split('-').map(Number);let y=p[0],m=p[1]-1+Number(n||0),d=p[2];y+=Math.floor(m/12);m=((m%12)+12)%12;const dim=new Date(y,m+1,0).getDate();if(d>dim)d=dim;return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+function yearsBetween(a,b){if(!a||!b)return 0;return (new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000/365.25;}
+function pct(n){return (n*100).toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:2})+'%';}
+// เงินกู้: คำนวณยอดคงค้าง สถานะเกินกำหนด และความคืบหน้าการผ่อน
+function loanCalc(l,payments){
+  const paid=payments.filter(p=>p.loan_id===l.id).reduce((s,p)=>s+(+p.amount||0),0);
+  const principal=+l.principal||0;
+  const outstanding=Math.max(0,principal-paid);
+  const end=(l.term_months&&l.start_date)?addMonths(l.start_date,+l.term_months):null;
+  const isClosed=l.status==='closed'||outstanding<=0.5;
+  const overdue=!isClosed && (l.status==='overdue' || (!!end && daysUntil(end)<0));
+  const daysLate=end?(-daysUntil(end)):0;
+  const yearsElapsed=yearsBetween(l.start_date,todayISO());
+  return {paid,principal,outstanding,end,isClosed,overdue,daysLate,yearsElapsed,progress:principal>0?Math.min(1,paid/principal):0};
+}
+// ประมาณค่างวดผ่อน (เงินต้น + ดอกเบี้ยแบบคงที่ตลอดสัญญา หารเท่ากันทุกงวด)
+function estInstallment(principal,ratePct,months){
+  principal=+principal||0;months=+months||0;if(!principal||!months)return 0;
+  const yrs=months/12;const interest=principal*(+ratePct||0)/100*yrs;
+  return Math.round((principal+interest)/months);
+}
+// การลงทุน: ต้นทุนรวม, ค่าธรรมเนียม%ของเงินต้น, กำไร/ขาดทุน, ผลตอบแทน AM & GM (ต่อปี)
+function investCalc(iv){
+  const buy=+iv.buy_price||0, fee=+iv.fee||0;
+  const cost=buy+fee;
+  const cur=+iv.current_value||0;
+  const feePct=buy>0?fee/buy:0;
+  const gain=cur-cost;
+  const totRet=cost>0?gain/cost:0;           // ผลตอบแทนรวม (สัดส่วน)
+  const yrs=yearsBetween(iv.buy_date,iv.current_date||todayISO());
+  const am=yrs>0?totRet/yrs:totRet;          // เฉลี่ยเลขคณิตต่อปี = ผลตอบแทนรวม ÷ จำนวนปี
+  const gm=(yrs>0&&cost>0&&cur>0)?Math.pow(cur/cost,1/yrs)-1:totRet; // เรขาคณิต (ทบต้น) = CAGR
+  return {buy,fee,cost,cur,feePct,gain,totRet,yrs,am,gm};
+}
+// พอร์ตรวม: AM = เฉลี่ยผลตอบแทนรวมของทุกสินทรัพย์, GM = รากที่ n ของผลคูณ (1+ผลตอบแทน)
+function portfolioAMGM(list){
+  const rows=list.map(investCalc).filter(r=>r.cost>0);
+  if(!rows.length)return {am:0,gm:0,n:0};
+  const am=rows.reduce((s,r)=>s+r.totRet,0)/rows.length;
+  const prod=rows.reduce((s,r)=>s*(1+r.totRet),1);
+  const gm=Math.pow(prod,1/rows.length)-1;
+  return {am,gm,n:rows.length};
+}
+// รายได้ค่าค้ำประกัน (ต่อปี)
+function guaranteeCalc(g){
+  const face=+g.facility_amount||0;
+  const annual=g.fee_type==='fixed' ? (+g.fee_amount||0) : face*(+g.fee_rate||0)/100;
+  return {face,annual};
+}
+
 /* ============================================================ LOGIN ============================================================ */
 function setupLogin(){
   $('#loginHint').innerHTML = USE_CLOUD?'ระบบเชื่อมต่อฐานข้อมูลกลางแล้ว':'โหมดทดลอง · บัญชีเริ่มต้น &nbsp;<b>owner / owner1234</b>';
@@ -459,7 +561,7 @@ setInterval(tickClock,1000);
 function tabDefs(){
   const t=[{id:'dash',ic:I.dash,label:'สรุป'},{id:'trans',ic:I.wallet,label:'บันทึกข้อมูล'},
     {id:'owner',ic:isOwner()?I.crown:I.bank,label:isOwner()?'บัญชี Owner':'โอนให้ Owner'}];
-  if(canLending()) t.push({id:'lending',ic:I.lend,label:'ปล่อยกู้/สัญญา'});
+  if(canLending()) t.push({id:'lending',ic:I.lend,label:'ปล่อยกู้ & ลงทุน'});
   t.push({id:'settings',ic:I.gear,label:isOwner()?'ตั้งค่า':'บัญชีฉัน'});
   return t;
 }
@@ -467,7 +569,7 @@ const PG_META={
   dash:['Dashboard สรุปผู้บริหาร','ภาพรวมการเงินของกลุ่มธุรกิจ'],
   trans:['บันทึกรายรับ-รายจ่าย','กรอกและติดตามรายการของแต่ละธุรกิจ'],
   owner:['บัญชี Owner','เงินโอนเข้า เงินยืม และการจ่ายคืน'],
-  lending:['ปล่อยกู้ & สัญญาสำคัญ','เงินให้กู้ธุรกิจในเครือ และเอกสารสัญญา'],
+  lending:['ปล่อยกู้ · ลงทุน · ค้ำประกัน','เงินให้กู้ การลงทุน รายได้ค่าค้ำประกัน และเอกสารสัญญา'],
   settings:['ตั้งค่าระบบ','ผู้ใช้งาน ธุรกิจ และการแจ้งเตือน']
 };
 function buildNav(){
@@ -631,11 +733,16 @@ async function renderDash(p){
   // owner + lending mini summary
   const transfers=await Store.list('owner_transfers');
   const tSum=transfers.filter(x=>(x.transfer_date||'').slice(0,7)===ym).reduce((s,x)=>s+ +x.amount,0);
-  let lendSum=0,lendCnt=0;
-  if(canLending()){const loans=await Store.list('affiliate_loans');lendSum=loans.reduce((s,l)=>s+(+l.principal||0),0);lendCnt=loans.length;}
+  let lendSum=0,lendCnt=0,lendOverdue=0;
+  if(canLending()){
+    const loans=await Store.list('affiliate_loans');
+    const pays=await Store.list('loan_payments');
+    loans.forEach(l=>{const c=loanCalc(l,pays);lendSum+=c.outstanding;if(c.overdue)lendOverdue++;});
+    lendCnt=loans.length;
+  }
   p.append(el('div',{class:'kpis'},
     kpi('ink','โอนให้ Owner (เดือนนี้)',money(tSum),'฿'),
-    canLending()?kpi('gold','เงินให้กู้คงค้าง',money(lendSum),'฿'):kpi('ink','จำนวนธุรกิจ',String(biz.length),'')));
+    canLending()?kpi(lendOverdue>0?'neg':'gold','เงินให้กู้คงค้าง'+(lendOverdue>0?' · เกินกำหนด '+lendOverdue:''),money(lendSum),'฿'):kpi('ink','จำนวนธุรกิจ',String(biz.length),'')));
 }
 
 /* ---------- TRANSACTIONS (หน้ากรอกข้อมูล) ---------- */
@@ -919,37 +1026,229 @@ function makeUploader(existing){
 }
 function fileLink(row){if(!row.file_data)return el('span',{class:'t-sub'},'ไม่มีไฟล์');return el('a',{class:'link-open',href:row.file_data,target:'_blank',download:row.file_name||'document'},'เปิดเอกสาร');}
 
-/* ---------- LENDING & DOCUMENTS ---------- */
+/* ---------- LENDING · INVESTMENT · GUARANTEE · DOCUMENTS ---------- */
+let LV={sub:'loans'};
 async function renderLending(p){
   p.innerHTML='';
+  const tabs=[['loans','ปล่อยกู้',I.lend]];
+  if(isOwner()){tabs.push(['invest','ลงทุน',I.chart]);tabs.push(['guarantee','รับค้ำประกัน',I.shield]);}
+  tabs.push(['docs','เอกสารสัญญา',I.doc]);
+  if(!tabs.some(t=>t[0]===LV.sub))LV.sub='loans';
+  const seg=el('div',{class:'seg',style:'margin-bottom:20px;flex-wrap:wrap'});
+  tabs.forEach(([v,l,ic])=>seg.append(el('button',{class:LV.sub===v?'sel':'',style:'display:flex;align-items:center;gap:7px',html:svg(ic,'')+'<span>'+l+'</span>',onclick:()=>{LV.sub=v;renderLending(p);}})));
+  p.append(seg);
+  if(LV.sub==='loans')await renderLoansSub(p);
+  else if(LV.sub==='invest')await renderInvestSub(p);
+  else if(LV.sub==='guarantee')await renderGuaranteeSub(p);
+  else await renderDocsSub(p);
+}
+
+/* ===== SUB: ปล่อยกู้ ===== */
+async function renderLoansSub(p){
   const loans=await Store.list('affiliate_loans',{col:'start_date',asc:false});
-  const docs=await Store.list('documents',{col:'created_at',asc:false});
-  const principal=loans.reduce((s,l)=>s+(+l.principal||0),0);
+  const payments=await Store.list('loan_payments');
+  const calcs=new Map(loans.map(l=>[l.id,loanCalc(l,payments)]));
+  const principalTot=loans.reduce((s,l)=>s+(+l.principal||0),0);
+  const outTot=loans.reduce((s,l)=>s+calcs.get(l.id).outstanding,0);
+  const overdueList=loans.filter(l=>calcs.get(l.id).overdue);
 
   const hc=el('div',{class:'card'});
-  hc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'สินเชื่อในเครือ'),el('h2',{},'ปล่อยกู้ธุรกิจในเครือ')),
+  hc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'สินเชื่อ / เงินให้กู้'),el('h2',{},'ปล่อยกู้ธุรกิจในเครือ & นอกเครือ')),
     el('button',{class:'btn btn-dark',html:svg(I.plus)+'เพิ่มสัญญากู้',onclick:()=>openAffiliateLoanModal()})));
-  hc.append(el('div',{class:'kpis',style:'margin:0'},kpi('gold','เงินต้นให้กู้รวม',money(principal),'฿'),kpi('ink','จำนวนสัญญา',String(loans.length),'')));
+  hc.append(el('div',{class:'kpis',style:'margin:0'},
+    kpi('gold','เงินต้นให้กู้รวม',money(principalTot),'฿'),
+    kpi(outTot>0?'ink':'pos','ยอดคงค้าง (ยังไม่คืน)',money(outTot),'฿'),
+    kpi('ink','จำนวนสัญญา',String(loans.length),''),
+    kpi(overdueList.length?'neg':'pos','เกินกำหนด/ค้างชำระ',String(overdueList.length),'สัญญา')));
   p.append(hc);
 
-  const lc=el('div',{class:'card'});lc.append(el('div',{class:'card-h'},el('h2',{},'รายการสัญญาเงินกู้')));
-  if(!loans.length)lc.append(emptyBox('ยังไม่มีสัญญากู้'));
-  else loans.forEach(l=>lc.append(el('div',{class:'doc-row'},
-    el('div',{class:'doc-ic',html:svg(I.lend)}),
-    el('div',{style:'flex:1;min-width:0'},
-      el('div',{class:'t-title'},l.business_name||'-'),
-      l.business_detail?el('div',{class:'t-sub'},l.business_detail):'',
-      el('div',{class:'t-sub'},`เงินต้น ${money(l.principal)} บาท · เริ่ม ${fmtDate(l.start_date)}${l.contract_detail?' · '+l.contract_detail:''}`),
-      el('div',{style:'margin-top:6px'},fileLink(l))),
-    el('div',{style:'display:flex;flex-direction:column;gap:8px;align-items:flex-end'},
-      el('span',{class:'rate-badge'},'ดอกเบี้ย '+(l.interest_rate||0)+'%/ปี'),
-      el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openAffiliateLoanModal(l)},'แก้ไข')))));
-  p.append(lc);
+  // แจ้งเตือนหนี้เกินกำหนด (Request 6)
+  if(overdueList.length){
+    const oc=el('div',{class:'card',style:'border-color:#e7b7b0'});
+    oc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow',style:'color:var(--red)'},'ต้องติดตามด่วน'),el('h2',{},'หนี้ที่เกินกำหนด / ยังไม่คืน'))));
+    overdueList.forEach(l=>{const c=calcs.get(l.id);
+      oc.append(el('div',{class:'alert-over'},
+        el('div',{class:'ao-ic',html:svg(I.alert)}),
+        el('div',{style:'flex:1;min-width:0'},
+          el('div',{class:'t-title'},l.business_name||'-'),
+          el('div',{class:'t-sub'},`คงค้าง ${money(c.outstanding)} บาท`+(c.end?` · ครบกำหนด ${fmtDate(c.end)} (เลย ${c.daysLate} วัน)`:` · ยืมมาแล้ว ${c.yearsElapsed.toFixed(1)} ปี`))),
+        el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},
+          el('button',{class:'btn btn-gold btn-sm',onclick:()=>openFollowupModal(l)},'บันทึกการติดตาม'),
+          el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openLoanDetail(l)},'รายละเอียด'))));
+    });
+    p.append(oc);
+  }
 
+  if(!loans.length){p.append(el('div',{class:'card'},emptyBox('ยังไม่มีสัญญากู้ — กด “เพิ่มสัญญากู้” เพื่อเริ่ม')));return;}
+  const followups=await Store.list('loan_followups');
+  for(const l of loans){
+    const c=calcs.get(l.id);
+    const fCount=followups.filter(f=>f.loan_id===l.id).length;
+    p.append(loanCardEl(l,c,fCount));
+  }
+}
+function loanCardEl(l,c,fCount){
+  const card=el('div',{class:'loancard'+(c.overdue?' over':'')+(c.isClosed?' closed':'')});
+  // header + chips
+  const chips=el('div',{class:'hl'});
+  chips.append(el('span',{class:'chip c-loan'},'ปล่อยกู้'));
+  chips.append(el('span',{class:'chip '+(l.borrower_type==='external'?'c-ext':'c-affil')},l.borrower_type==='external'?'นอกเครือ':'ในเครือ'));
+  chips.append(el('span',{class:'chip '+(l.secured==='secured'?'c-secured':'c-unsec')},l.secured==='secured'?'มีหลักประกัน':'ไม่มีหลักประกัน'));
+  const stChip=c.isClosed?['c-closed','ปิดสัญญาแล้ว']:c.overdue?['c-over','ค้างชำระ/เกินกำหนด']:['c-active','กำลังผ่อนชำระ'];
+  chips.append(el('span',{class:'chip '+stChip[0]},stChip[1]));
+  card.append(el('div',{class:'lc-top'},
+    el('div',{style:'min-width:0'},el('div',{class:'lc-name'},l.business_name||'-'),chips),
+    el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openAffiliateLoanModal(l)},'แก้ไข')));
+  if(l.business_detail)card.append(el('div',{class:'t-sub',style:'margin-top:8px'},l.business_detail));
+  // purpose / expected
+  if(l.purpose||l.expected_outcome){
+    const pe=el('div',{style:'margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:12px'});
+    if(l.purpose)pe.append(el('div',{},el('div',{class:'dcell',style:'background:#fff;border:none;padding:0'},el('div',{class:'l'},'กู้ไปทำอะไร'),el('div',{style:'margin-top:2px'},l.purpose))));
+    if(l.expected_outcome)pe.append(el('div',{},el('div',{class:'dcell',style:'background:#fff;border:none;padding:0'},el('div',{class:'l'},'ผลลัพธ์ที่คาดหวัง'),el('div',{style:'margin-top:2px'},l.expected_outcome))));
+    card.append(pe);
+  }
+  // financial grid
+  const termTxt=l.term_months?`${l.term_months} เดือน`+(l.term_months>=12?` (~${(l.term_months/12).toLocaleString('th-TH',{maximumFractionDigits:1})} ปี)`:''):'—';
+  const g=el('div',{class:'dgrid'});
+  const cell=(lab,val,cls='')=>el('div',{class:'dcell '+cls},el('div',{class:'l'},lab),el('div',{class:'v'+(String(val).length>12?' sm':'')},val));
+  g.append(cell('เงินต้น',money(l.principal)+' ฿'));
+  g.append(cell('ดอกเบี้ย',(l.interest_rate||0)+'% /ปี','gold'));
+  g.append(cell('ระยะเวลา',termTxt));
+  g.append(cell('ผ่อนงวดละ',l.installment?money(l.installment)+' ฿':'—'));
+  g.append(cell('เริ่มสัญญา',fmtDate(l.start_date)||'—'));
+  g.append(cell('ครบกำหนด',c.end?fmtDate(c.end):'—',c.overdue?'neg':''));
+  if(l.secured==='secured'){
+    g.append(cell('หลักประกัน',l.collateral_desc||'—'));
+    g.append(cell('มูลค่าหลักประกัน',l.collateral_value?money(l.collateral_value)+' ฿':'—','pos'));
+  }
+  card.append(g);
+  // repayment progress
+  const pw=el('div',{class:'prog-wrap'});
+  pw.append(el('div',{class:'prog'+(c.overdue?' over':'')},el('span',{style:'width:'+Math.round(c.progress*100)+'%'})));
+  pw.append(el('div',{class:'prog-meta'},
+    el('span',{},'ผ่อนคืนแล้ว '+money(c.paid)+' ฿ ('+Math.round(c.progress*100)+'%)'),
+    el('span',{style:c.outstanding>0?'color:var(--red)':'color:var(--emer)'},c.outstanding>0?('คงค้าง '+money(c.outstanding)+' ฿'):'ชำระครบแล้ว')));
+  card.append(pw);
+  if(l.file_data)card.append(el('div',{style:'margin-top:10px'},fileLink(l)));
+  // actions
+  const act=el('div',{class:'lc-actions'});
+  if(!c.isClosed)act.append(el('button',{class:'btn btn-dark btn-sm',html:svg(I.plus)+'รับชำระคืน',onclick:()=>openPaymentModal(l)}));
+  act.append(el('button',{class:'btn btn-ghost btn-sm',html:svg(I.clock)+'ติดตามหนี้'+(fCount?' ('+fCount+')':''),onclick:()=>openFollowupModal(l)}));
+  act.append(el('button',{class:'btn btn-ghost btn-sm',html:svg(I.doc)+'รายละเอียด & ประวัติ',onclick:()=>openLoanDetail(l)}));
+  card.append(act);
+  return card;
+}
+
+/* ===== SUB: ลงทุน (owner only) ===== */
+async function renderInvestSub(p){
+  if(!isOwner()){p.append(el('div',{class:'card'},emptyBox('เฉพาะเจ้าของกิจการ (Owner) เท่านั้น')));return;}
+  const list=await Store.list('investments',{col:'buy_date',asc:false});
+  const costTot=list.reduce((s,iv)=>s+investCalc(iv).cost,0);
+  const curTot=list.reduce((s,iv)=>s+investCalc(iv).cur,0);
+  const gainTot=curTot-costTot;
+  const port=portfolioAMGM(list);
+
+  const hc=el('div',{class:'card'});
+  hc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'พอร์ตการลงทุน'),el('h2',{})),
+    el('button',{class:'btn btn-dark',html:svg(I.plus)+'เพิ่มการลงทุน',onclick:()=>openInvestmentModal()})));
+  hc.querySelector('h2').innerHTML='เงินลงทุนในสินทรัพย์ &nbsp;<span class="owner-only-tag">เฉพาะ Owner</span>';
+  hc.append(el('div',{class:'kpis',style:'margin:0'},
+    kpi('gold','ต้นทุนรวม (รวมค่าธรรมเนียม)',money(costTot),'฿'),
+    kpi('ink','มูลค่าปัจจุบันรวม',money(curTot),'฿'),
+    kpi(gainTot>=0?'pos':'neg','กำไร/ขาดทุนที่ยังไม่รับรู้',money(gainTot),'฿'),
+    kpi(port.am>=0?'pos':'neg','ผลตอบแทนพอร์ต (AM ต่อปี ต่อสินทรัพย์)',pct(port.am),'')));
+  p.append(hc);
+
+  if(list.length){
+    const sc=el('div',{class:'card'});
+    sc.append(el('div',{class:'card-h'},el('h2',{},'สรุปผลตอบแทนทั้งพอร์ต')));
+    sc.append(el('div',{class:'dgrid'},
+      el('div',{class:'dcell '+(port.am>=0?'pos':'neg')},el('div',{class:'l'},'ผลตอบแทนเฉลี่ยเลขคณิต (AM)'),el('div',{class:'v'},pct(port.am))),
+      el('div',{class:'dcell '+(port.gm>=0?'pos':'neg')},el('div',{class:'l'},'ผลตอบแทนเฉลี่ยเรขาคณิต (GM)'),el('div',{class:'v'},pct(port.gm)))));
+    sc.append(el('div',{class:'metric-note'},'AM (Arithmetic Mean) = ค่าเฉลี่ยผลตอบแทนรวมของทุกสินทรัพย์แบบธรรมดา · GM (Geometric Mean) = รากที่ n ของผลคูณ (1 + ผลตอบแทนของแต่ละสินทรัพย์) แล้วลบ 1 ซึ่งสะท้อนการทบต้นได้ดีกว่า · ระดับสินทรัพย์: AM ต่อปี = ผลตอบแทนรวม ÷ จำนวนปีถือครอง, GM ต่อปี = CAGR (อัตราเติบโตทบต้นต่อปี)'));
+    p.append(sc);
+  }
+
+  const lc=el('div',{class:'card'});
+  lc.append(el('div',{class:'card-h'},el('h2',{},'รายการสินทรัพย์ลงทุน')));
+  if(!list.length)lc.append(emptyBox('ยังไม่มีการลงทุน'));
+  else list.forEach(iv=>{
+    const r=investCalc(iv);
+    const card=el('div',{class:'loancard'});
+    card.append(el('div',{class:'lc-top'},
+      el('div',{style:'min-width:0'},el('div',{class:'lc-name'},iv.asset_name||'-'),
+        el('div',{class:'hl'},el('span',{class:'chip c-invest'},ASSET_LABEL[iv.asset_type]||'สินทรัพย์'),
+          iv.units?el('span',{class:'chip c-neutral'},'จำนวน '+iv.units+' หน่วย'):'' )),
+      el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openInvestmentModal(iv)},'แก้ไข')));
+    const g=el('div',{class:'dgrid'});
+    const cell=(lab,val,cls='')=>el('div',{class:'dcell '+cls},el('div',{class:'l'},lab),el('div',{class:'v'+(String(val).length>12?' sm':'')},val));
+    g.append(cell('ราคา ณ วันซื้อ',money(r.buy)+' ฿'));
+    g.append(cell('ค่าธรรมเนียม',money(r.fee)+' ฿ ('+pct(r.feePct)+' ของเงินต้น)'));
+    g.append(cell('ต้นทุนรวม',money(r.cost)+' ฿'));
+    g.append(cell('มูลค่าปัจจุบัน',money(r.cur)+' ฿',r.gain>=0?'pos':'neg'));
+    g.append(cell('กำไร/ขาดทุน',(r.gain>=0?'+':'')+money(r.gain)+' ฿',r.gain>=0?'pos':'neg'));
+    g.append(cell('ผลตอบแทนรวม',pct(r.totRet),r.totRet>=0?'pos':'neg'));
+    g.append(cell('AM (ต่อปี)',pct(r.am),r.am>=0?'pos':'neg'));
+    g.append(cell('GM / CAGR (ต่อปี)',pct(r.gm),r.gm>=0?'pos':'neg'));
+    card.append(g);
+    card.append(el('div',{class:'t-sub'},`ซื้อเมื่อ ${fmtDate(iv.buy_date)} · ราคาอ้างอิง ณ ${fmtDate(iv.current_date||todayISO())} · ถือครอง ${r.yrs.toFixed(2)} ปี`+(iv.note?' · '+iv.note:'')));
+    lc.append(card);
+  });
+  p.append(lc);
+}
+
+/* ===== SUB: รับค้ำประกัน (owner only) ===== */
+async function renderGuaranteeSub(p){
+  if(!isOwner()){p.append(el('div',{class:'card'},emptyBox('เฉพาะเจ้าของกิจการ (Owner) เท่านั้น')));return;}
+  const list=await Store.list('guarantees',{col:'start_date',asc:false});
+  const faceTot=list.reduce((s,g)=>s+guaranteeCalc(g).face,0);
+  const feeTot=list.filter(g=>g.status!=='closed').reduce((s,g)=>s+guaranteeCalc(g).annual,0);
+  const activeCnt=list.filter(g=>g.status!=='closed').length;
+
+  const hc=el('div',{class:'card'});
+  hc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'รายได้ค่าค้ำประกัน'),el('h2',{})),
+    el('button',{class:'btn btn-dark',html:svg(I.plus)+'เพิ่มการค้ำประกัน',onclick:()=>openGuaranteeModal()})));
+  hc.querySelector('h2').innerHTML='รับค้ำประกันให้ธุรกิจ &nbsp;<span class="owner-only-tag">เฉพาะ Owner</span>';
+  hc.append(el('div',{class:'kpis',style:'margin:0'},
+    kpi('ink','วงเงินที่ค้ำรวม',money(faceTot),'฿'),
+    kpi('pos','ค่าค้ำประกันต่อปี (ที่ยังใช้งาน)',money(feeTot),'฿'),
+    kpi('ink','สัญญาที่ยังใช้งาน',String(activeCnt),'')));
+  hc.append(el('div',{class:'metric-note',style:'margin-top:14px'},'ใช้เมื่อธุรกิจนำ “ชื่อส่วนตัวของเจ้าของ” หรือ “ยืมทรัพย์สินส่วนตัว (asset)” ของเจ้าของไปค้ำวงเงินกู้ — เจ้าของคิดค่าตอบแทนการค้ำได้ ทั้งแบบร้อยละต่อปีของวงเงิน หรือจำนวนเงินคงที่ต่อปี'));
+  p.append(hc);
+
+  const lc=el('div',{class:'card'});
+  lc.append(el('div',{class:'card-h'},el('h2',{},'รายการค้ำประกัน')));
+  if(!list.length)lc.append(emptyBox('ยังไม่มีรายการค้ำประกัน'));
+  else list.forEach(g=>{
+    const r=guaranteeCalc(g);
+    const card=el('div',{class:'loancard'+(g.status==='closed'?' closed':'')});
+    card.append(el('div',{class:'lc-top'},
+      el('div',{style:'min-width:0'},el('div',{class:'lc-name'},g.beneficiary||'-'),
+        el('div',{class:'hl'},
+          el('span',{class:'chip '+(g.guarantee_type==='asset'?'c-invest':'c-loan')},g.guarantee_type==='asset'?'ยืมทรัพย์สินส่วนตัวค้ำ':'ใช้ชื่อส่วนตัวค้ำ'),
+          el('span',{class:'chip '+(g.status==='closed'?'c-closed':'c-active')},g.status==='closed'?'สิ้นสุดแล้ว':'กำลังค้ำอยู่'))),
+      el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openGuaranteeModal(g)},'แก้ไข')));
+    if(g.guarantee_type==='asset'&&g.asset_desc)card.append(el('div',{class:'t-sub',style:'margin-top:8px'},'ทรัพย์สินที่ใช้ค้ำ: '+g.asset_desc));
+    const gr=el('div',{class:'dgrid'});
+    const cell=(lab,val,cls='')=>el('div',{class:'dcell '+cls},el('div',{class:'l'},lab),el('div',{class:'v'+(String(val).length>12?' sm':'')},val));
+    gr.append(cell('วงเงินที่ค้ำ',money(r.face)+' ฿'));
+    gr.append(cell('ค่าตอบแทน',g.fee_type==='fixed'?(money(g.fee_amount)+' ฿/ปี'):((g.fee_rate||0)+'% ต่อปี'),'gold'));
+    gr.append(cell('ค่าค้ำต่อปี',money(r.annual)+' ฿','pos'));
+    gr.append(cell('ระยะเวลา',fmtDate(g.start_date)+(g.end_date?' – '+fmtDate(g.end_date):'')));
+    card.append(gr);
+    if(g.note)card.append(el('div',{class:'t-sub'},g.note));
+    lc.append(card);
+  });
+  p.append(lc);
+}
+
+/* ===== SUB: เอกสารสัญญา ===== */
+async function renderDocsSub(p){
+  const docs=await Store.list('documents',{col:'created_at',asc:false});
   const dc=el('div',{class:'card'});
   dc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'คลังเอกสาร'),el('h2',{},'สัญญาเช่า & เอกสารสำคัญ')),
     el('button',{class:'btn btn-dark',html:svg(I.plus)+'อัปโหลดเอกสาร',onclick:()=>openDocModal()})));
-  dc.append(el('div',{class:'field-help',style:'margin:-6px 0 10px'},'เก็บสัญญาเช่าที่ดิน/อาคาร และเอกสารสำคัญอื่น ๆ ไว้ในที่เดียว'));
+  dc.append(el('div',{class:'field-help',style:'margin:-6px 0 10px'},'เก็บสัญญาเช่าที่ดิน/อาคาร สัญญากู้ และเอกสารสำคัญอื่น ๆ ไว้ในที่เดียว'));
   if(!docs.length)dc.append(emptyBox('ยังไม่มีเอกสาร'));
   else docs.forEach(d=>dc.append(el('div',{class:'doc-row'},
     el('div',{class:'doc-ic',html:svg(I.doc)}),
@@ -962,33 +1261,244 @@ async function renderLending(p){
       el('button',{class:'btn btn-danger btn-sm',onclick:async()=>{if(confirm('ลบเอกสารนี้?')){await Store.remove('documents',d.id);toast('ลบแล้ว');render();}}},'ลบ')))));
   p.append(dc);
 }
-function openAffiliateLoanModal(existing){
-  const x=existing||{business_name:'',business_detail:'',principal:'',interest_rate:'',contract_detail:'',start_date:todayISO(),note:''};
-  const {bg,m}=modal(existing?'แก้ไขสัญญากู้':'เพิ่มสัญญากู้ธุรกิจในเครือ');const body=el('div',{class:'modal-body'});
-  const name=el('input',{type:'text',placeholder:'ชื่อธุรกิจผู้กู้',value:x.business_name||''});
-  const detail=el('textarea',{placeholder:'รายละเอียดธุรกิจ (ประเภทกิจการ ที่ตั้ง ผู้ติดต่อ ฯลฯ)'},x.business_detail||'');
+
+/* ===== MODAL: สัญญากู้ ===== */
+async function openAffiliateLoanModal(existing){
+  const x=existing||{borrower_type:'affiliate',business_name:'',business_detail:'',purpose:'',expected_outcome:'',secured:'unsecured',collateral_desc:'',collateral_value:'',principal:'',interest_rate:'',term_months:'',installment:'',start_date:todayISO(),borrower_history:'',status:'active',note:''};
+  const bizAll=(await Store.list('businesses',{col:'name',asc:true})).filter(b=>b.active!==false);
+  const {bg,m}=modal(existing?'แก้ไขสัญญากู้':'เพิ่มสัญญากู้');const body=el('div',{class:'modal-body'});
+
+  // ในเครือ / นอกเครือ (Request 2)
+  let bt=x.borrower_type||'affiliate';
+  const bizSel=el('select',{});bizAll.forEach(b=>{const o=el('option',{value:b.name},b.name);if(x.business_name===b.name)o.selected=true;bizSel.append(o);});
+  if(!bizAll.length)bizSel.append(el('option',{value:''},'— ยังไม่มีธุรกิจในเครือ —'));
+  const extName=el('input',{type:'text',placeholder:'ชื่อธุรกิจ/บุคคลผู้กู้ (นอกเครือ)',value:(bt==='external'?(x.business_name||''):'')});
+  const affWrap=el('div',{class:'fld'},el('label',{},'เลือกธุรกิจในเครือ'),bizSel);
+  const extWrap=el('div',{class:'fld'},el('label',{},'ชื่อผู้กู้ (นอกเครือ)'),extName);
+  function drawBT(){affWrap.style.display=bt==='affiliate'?'block':'none';extWrap.style.display=bt==='external'?'block':'none';}
+  const btSeg=segControl([['affiliate','ธุรกิจในเครือ'],['external','ธุรกิจนอกเครือ']],bt,v=>{bt=v;drawBT();});
+  drawBT();
+
+  const detail=el('textarea',{placeholder:'ประเภทกิจการ ที่ตั้ง ผู้ติดต่อ ฯลฯ'},x.business_detail||'');
+  const purpose=el('textarea',{placeholder:'กู้เงินไปทำอะไร เช่น ขยายสาขา ซื้อเครื่องจักร เสริมสภาพคล่อง'},x.purpose||'');
+  const outcome=el('textarea',{placeholder:'ผลลัพธ์ที่คาดหวัง เช่น รายได้เพิ่ม 20% ภายใน 1 ปี'},x.expected_outcome||'');
+
+  // มีหลักประกัน / ไม่มี (Request 1)
+  let sec=x.secured||'unsecured';
+  const colDesc=el('input',{type:'text',placeholder:'เช่น โฉนดที่ดิน / รถยนต์ / เครื่องจักร',value:x.collateral_desc||''});
+  const colVal=el('input',{type:'number',inputmode:'decimal',placeholder:'0.00',value:x.collateral_value||''});
+  const colWrap=el('div',{},el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'หลักประกันเป็นอะไร'),colDesc),el('div',{class:'fld'},el('label',{},'มูลค่าหลักประกัน (บาท)'),colVal)));
+  const secSeg=segControl([['unsecured','ไม่มีหลักประกัน'],['secured','มีหลักประกัน']],sec,v=>{sec=v;colWrap.style.display=sec==='secured'?'block':'none';});
+  colWrap.style.display=sec==='secured'?'block':'none';
+
   const principal=el('input',{type:'number',inputmode:'decimal',placeholder:'0.00',value:x.principal||''});
   const rate=el('input',{type:'number',inputmode:'decimal',placeholder:'เช่น 7.5',value:x.interest_rate||''});
+
+  // ระยะเวลา (เดือน/ปี) + ค่างวด (Request 1)
+  let termUnit='month';
+  const termNum=el('input',{type:'number',inputmode:'numeric',placeholder:'เช่น 12',value:x.term_months?(Number(x.term_months)%12===0?Number(x.term_months)/12:x.term_months):''});
+  if(x.term_months&&Number(x.term_months)%12===0)termUnit='year';
+  const termUnitSel=el('select',{});[['month','เดือน'],['year','ปี']].forEach(([v,l])=>{const o=el('option',{value:v},l);if(termUnit===v)o.selected=true;termUnitSel.append(o);});
+  const installment=el('input',{type:'number',inputmode:'decimal',placeholder:'ผ่อนคืนงวด(เดือน)ละเท่าไหร่',value:x.installment||''});
+  const monthsOf=()=>termUnitSel.value==='year'?Number(termNum.value||0)*12:Number(termNum.value||0);
+  const estBtn=el('button',{type:'button',class:'btn btn-ghost btn-sm',style:'margin-top:8px',onclick:()=>{const est=estInstallment(principal.value,rate.value,monthsOf());if(!est){toast('กรอกเงินต้น ดอกเบี้ย และระยะเวลาก่อน');return;}installment.value=est;toast('ประมาณค่างวด ≈ '+money(est)+' ฿');}},'คำนวณค่างวดโดยประมาณ');
+
   const start=el('input',{type:'date',value:x.start_date||todayISO()});
-  const contract=el('textarea',{placeholder:'รายละเอียดในสัญญากู้ (ระยะเวลา งวดชำระ หลักประกัน เงื่อนไข ฯลฯ)'},x.contract_detail||'');
+  const history=el('textarea',{placeholder:'ประวัติผู้กู้ / ประวัติการชำระที่ผ่านมา / ความน่าเชื่อถือ'},x.borrower_history||'');
+  const statusSel=el('select',{});LOAN_STATUS.forEach(([v,l])=>{const o=el('option',{value:v},l);if((x.status||'active')===v)o.selected=true;statusSel.append(o);});
   const note=el('input',{type:'text',placeholder:'หมายเหตุ (ไม่บังคับ)',value:x.note||''});
   const up=makeUploader(existing);
+
   body.append(
-    el('div',{class:'fld'},el('label',{},'ชื่อธุรกิจผู้กู้'),name),
-    el('div',{class:'fld'},el('label',{},'รายละเอียดธุรกิจ'),detail),
-    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'เงินต้น (บาท)'),principal),el('div',{class:'fld'},el('label',{},'อัตราดอกเบี้ย (%/ปี)'),rate)),
+    el('div',{class:'fld'},el('label',{},'ประเภทผู้กู้'),btSeg),
+    affWrap,extWrap,
+    el('div',{class:'fld'},el('label',{},'รายละเอียดธุรกิจผู้กู้'),detail),
+    el('div',{class:'fld'},el('label',{},'กู้ไปทำอะไร (วัตถุประสงค์)'),purpose),
+    el('div',{class:'fld'},el('label',{},'ผลลัพธ์ที่คาดหวัง'),outcome),
+    el('div',{class:'divider'}),
+    el('div',{class:'fld'},el('label',{},'หลักประกัน'),secSeg),colWrap,
+    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'เงินต้น (บาท)'),principal),el('div',{class:'fld'},el('label',{},'ดอกเบี้ย (%/ปี)'),rate)),
+    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'ระยะเวลาส่งคืน'),termNum),el('div',{class:'fld'},el('label',{},'หน่วย'),termUnitSel)),
+    el('div',{class:'fld'},el('label',{},'ผ่อนคืนงวดละ (บาท/เดือน)'),installment,estBtn),
     el('div',{class:'fld'},el('label',{},'วันที่เริ่มสัญญา'),start),
-    el('div',{class:'fld'},el('label',{},'รายละเอียดในสัญญากู้'),contract),
+    el('div',{class:'fld'},el('label',{},'ประวัติผู้กู้'),history),
+    el('div',{class:'fld'},el('label',{},'สถานะสัญญา'),statusSel),
     el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note),
     el('div',{class:'fld'},el('label',{},'เอกสารสัญญากู้'),up.node));
   m.append(body);
   const foot=el('div',{class:'modal-foot'});
-  if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบสัญญานี้?')){await Store.remove('affiliate_loans',existing.id);toast('ลบแล้ว');closeModal();render();}}},'ลบ'));
+  if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบสัญญานี้? (ประวัติการชำระ/ติดตามจะถูกลบด้วย)')){await Store.remove('affiliate_loans',existing.id);toast('ลบแล้ว');closeModal();render();}}},'ลบ'));
   foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),el('button',{class:'btn btn-dark',onclick:async()=>{
-    if(!name.value.trim()){toast('กรุณาใส่ชื่อธุรกิจ');return;}
+    const bname=bt==='external'?extName.value.trim():bizSel.value;
+    if(!bname){toast('กรุณาระบุชื่อผู้กู้');return;}
     const f=up.get();
-    const payload={business_name:name.value.trim(),business_detail:detail.value.trim(),principal:Number(principal.value||0),interest_rate:Number(rate.value||0),contract_detail:contract.value.trim(),start_date:start.value,note:note.value.trim(),file_name:f?f.file_name:null,file_data:f?f.file_data:null,created_by:App.user.username};
+    const payload={borrower_type:bt,business_name:bname,business_detail:detail.value.trim(),purpose:purpose.value.trim(),expected_outcome:outcome.value.trim(),
+      secured:sec,collateral_desc:sec==='secured'?colDesc.value.trim():'',collateral_value:sec==='secured'?Number(colVal.value||0):0,
+      principal:Number(principal.value||0),interest_rate:Number(rate.value||0),term_months:monthsOf(),installment:Number(installment.value||0),
+      start_date:start.value,borrower_history:history.value.trim(),status:statusSel.value,note:note.value.trim(),
+      file_name:f?f.file_name:null,file_data:f?f.file_data:null,created_by:App.user.username};
     if(existing)await Store.update('affiliate_loans',existing.id,payload);else await Store.insert('affiliate_loans',payload);
+    toast('บันทึกแล้ว');closeModal();render();
+  }},'บันทึก'));m.append(foot);showModal(bg);
+}
+
+/* ===== MODAL: รับชำระคืน ===== */
+function openPaymentModal(loan){
+  const {bg,m}=modal('บันทึกรับชำระคืน',loan.business_name);const body=el('div',{class:'modal-body'});
+  const amt=el('input',{type:'number',inputmode:'decimal',placeholder:'0.00'});
+  const date=el('input',{type:'date',value:todayISO()});
+  const note=el('input',{type:'text',placeholder:'เช่น งวดที่ 3 / เงินต้นบางส่วน'});
+  body.append(el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'จำนวนเงินที่รับคืน (บาท)'),amt),el('div',{class:'fld'},el('label',{},'วันที่รับ'),date)),
+    el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note));
+  m.append(body);
+  m.append(el('div',{class:'modal-foot'},el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),el('button',{class:'btn btn-dark',onclick:async()=>{
+    const a=Number(amt.value);if(!a||a<=0){toast('กรุณาใส่จำนวนเงิน');return;}
+    await Store.insert('loan_payments',{loan_id:loan.id,amount:a,pay_date:date.value,note:note.value.trim(),created_by:App.user.username});
+    // ปิดสัญญาอัตโนมัติเมื่อชำระครบ
+    const pays=await Store.list('loan_payments');const c=loanCalc(loan,pays);
+    if(c.outstanding<=0.5&&loan.status!=='closed')await Store.update('affiliate_loans',loan.id,{status:'closed'});
+    toast('บันทึกรับชำระแล้ว');closeModal();render();
+  }},'บันทึก')));showModal(bg);
+}
+
+/* ===== MODAL: ติดตามหนี้ ===== */
+async function openFollowupModal(loan){
+  const {bg,m}=modal('ติดตามหนี้ / ทวงถาม',loan.business_name);const body=el('div',{class:'modal-body'});
+  const chanSel=el('select',{});FOLLOWUP_CHANNELS.forEach(c=>chanSel.append(el('option',{value:c},c)));
+  const date=el('input',{type:'date',value:todayISO()});
+  const detail=el('textarea',{placeholder:'ผลการติดตาม เช่น รับปากจะโอนภายในสิ้นเดือน / ติดต่อไม่ได้'});
+  const next=el('input',{type:'date'});
+  body.append(el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'ช่องทาง'),chanSel),el('div',{class:'fld'},el('label',{},'วันที่ติดตาม'),date)),
+    el('div',{class:'fld'},el('label',{},'รายละเอียด/ผลการติดตาม'),detail),
+    el('div',{class:'fld'},el('label',{},'นัดติดตามครั้งถัดไป (ถ้ามี)'),next));
+  m.append(body);
+  m.append(el('div',{class:'modal-foot'},el('button',{class:'btn btn-ghost',onclick:()=>openLoanDetail(loan)},'ดูประวัติ'),el('button',{class:'btn btn-dark',onclick:async()=>{
+    if(!detail.value.trim()){toast('กรุณากรอกรายละเอียด');return;}
+    await Store.insert('loan_followups',{loan_id:loan.id,channel:chanSel.value,fu_date:date.value,detail:detail.value.trim(),next_date:next.value||null,created_by:App.user.username});
+    toast('บันทึกการติดตามแล้ว');closeModal();render();
+  }},'บันทึก')));showModal(bg);
+}
+
+/* ===== MODAL: รายละเอียด & ประวัติ ===== */
+async function openLoanDetail(loan){
+  const payments=(await Store.list('loan_payments')).filter(p=>p.loan_id===loan.id).sort((a,b)=>(b.pay_date||'').localeCompare(a.pay_date||''));
+  const followups=(await Store.list('loan_followups')).filter(f=>f.loan_id===loan.id).sort((a,b)=>(b.fu_date||'').localeCompare(a.fu_date||''));
+  const c=loanCalc(loan,payments);
+  const {bg,m}=modal('รายละเอียดสัญญา & ประวัติ',loan.business_name);const body=el('div',{class:'modal-body'});
+
+  const g=el('div',{class:'dgrid'});
+  const cell=(lab,val,cls='')=>el('div',{class:'dcell '+cls},el('div',{class:'l'},lab),el('div',{class:'v'+(String(val).length>12?' sm':'')},val));
+  g.append(cell('เงินต้น',money(loan.principal)+' ฿'));
+  g.append(cell('ผ่อนคืนแล้ว',money(c.paid)+' ฿','pos'));
+  g.append(cell('คงค้าง',money(c.outstanding)+' ฿',c.outstanding>0?'neg':'pos'));
+  g.append(cell('ดอกเบี้ย',(loan.interest_rate||0)+'% /ปี','gold'));
+  body.append(g);
+  if(loan.purpose)body.append(el('div',{class:'fld'},el('label',{},'กู้ไปทำอะไร'),el('div',{class:'t-sub'},loan.purpose)));
+  if(loan.expected_outcome)body.append(el('div',{class:'fld'},el('label',{},'ผลลัพธ์ที่คาดหวัง'),el('div',{class:'t-sub'},loan.expected_outcome)));
+  if(loan.borrower_history)body.append(el('div',{class:'fld'},el('label',{},'ประวัติผู้กู้'),el('div',{class:'t-sub'},loan.borrower_history)));
+
+  body.append(el('div',{class:'divider'}));
+  body.append(el('div',{class:'card-h'},el('h2',{style:'font-size:1rem'},'ประวัติการรับชำระคืน'),el('button',{class:'btn btn-dark btn-sm',onclick:()=>openPaymentModal(loan)},'+ รับชำระ')));
+  if(!payments.length)body.append(el('div',{class:'t-sub',style:'padding:8px 0'},'ยังไม่มีการชำระคืน'));
+  else payments.forEach(pm=>body.append(el('div',{class:'logline'},
+    el('div',{class:'lt'},fmtDate(pm.pay_date)),
+    el('div',{style:'flex:1'},el('div',{class:'num pos',style:'text-align:left'},'+'+money(pm.amount)+' ฿'),pm.note?el('div',{class:'t-sub'},pm.note):''),
+    el('button',{class:'btn btn-danger btn-sm',onclick:async()=>{if(confirm('ลบรายการชำระนี้?')){await Store.remove('loan_payments',pm.id);closeModal();render();}}},'ลบ'))));
+
+  body.append(el('div',{class:'divider'}));
+  body.append(el('div',{class:'card-h'},el('h2',{style:'font-size:1rem'},'ประวัติการติดตามหนี้'),el('button',{class:'btn btn-gold btn-sm',onclick:()=>openFollowupModal(loan)},'+ ติดตาม')));
+  if(!followups.length)body.append(el('div',{class:'t-sub',style:'padding:8px 0'},'ยังไม่มีบันทึกการติดตาม'));
+  else followups.forEach(f=>body.append(el('div',{class:'logline'},
+    el('div',{class:'lt'},fmtDate(f.fu_date)),
+    el('div',{style:'flex:1'},el('div',{class:'t-title',style:'font-size:.92rem'},f.channel),el('div',{class:'t-sub'},f.detail+(f.next_date?' · นัดถัดไป '+fmtDate(f.next_date):'')),''),
+    el('button',{class:'btn btn-danger btn-sm',onclick:async()=>{if(confirm('ลบบันทึกนี้?')){await Store.remove('loan_followups',f.id);closeModal();render();}}},'ลบ'))));
+  m.append(body);
+  m.append(el('div',{class:'modal-foot'},el('button',{class:'btn btn-ghost',onclick:closeModal},'ปิด'),el('button',{class:'btn btn-dark',onclick:()=>openAffiliateLoanModal(loan)},'แก้ไขสัญญา')));
+  showModal(bg);
+}
+
+/* ===== MODAL: ลงทุน ===== */
+function openInvestmentModal(existing){
+  const x=existing||{asset_type:'stock',asset_name:'',units:'',buy_date:todayISO(),buy_price:'',fee:'',current_value:'',current_date:todayISO(),note:''};
+  const {bg,m}=modal(existing?'แก้ไขการลงทุน':'เพิ่มการลงทุน');const body=el('div',{class:'modal-body'});
+  const typeSel=el('select',{});ASSET_TYPES.forEach(([v,l])=>{const o=el('option',{value:v},l);if(x.asset_type===v)o.selected=true;typeSel.append(o);});
+  const name=el('input',{type:'text',placeholder:'เช่น PTT / ทองคำแท่ง 96.5%',value:x.asset_name||''});
+  const units=el('input',{type:'number',inputmode:'decimal',placeholder:'จำนวนหน่วย/หุ้น (ไม่บังคับ)',value:x.units||''});
+  const buyDate=el('input',{type:'date',value:x.buy_date||todayISO()});
+  const buyPrice=el('input',{type:'number',inputmode:'decimal',placeholder:'ราคา ณ วันที่ซื้อ (รวม)',value:x.buy_price||''});
+  const fee=el('input',{type:'number',inputmode:'decimal',placeholder:'ค่าธรรมเนียม/ค่าใช้จ่ายอื่น',value:x.fee||''});
+  const feeHint=el('div',{class:'field-help'},'');
+  const curDate=el('input',{type:'date',value:x.current_date||todayISO()});
+  const curVal=el('input',{type:'number',inputmode:'decimal',placeholder:'มูลค่า ณ วันปัจจุบัน',value:x.current_value||''});
+  const note=el('input',{type:'text',placeholder:'หมายเหตุ (ไม่บังคับ)',value:x.note||''});
+  const preview=el('div',{class:'metric-note'},'');
+  function upd(){
+    const bp=Number(buyPrice.value||0),fv=Number(fee.value||0);
+    feeHint.textContent=bp>0?('= '+pct(fv/bp)+' ของเงินต้น'):'กรอกเงินต้นเพื่อคำนวณ % ค่าธรรมเนียม';
+    const r=investCalc({buy_price:bp,fee:fv,current_value:Number(curVal.value||0),buy_date:buyDate.value,current_date:curDate.value});
+    preview.innerHTML=`ต้นทุนรวม <b>${money(r.cost)}</b> ฿ · กำไร/ขาดทุน <b>${money(r.gain)}</b> ฿ · ผลตอบแทนรวม <b>${pct(r.totRet)}</b> · AM <b>${pct(r.am)}</b>/ปี · GM(CAGR) <b>${pct(r.gm)}</b>/ปี`;
+  }
+  [buyPrice,fee,curVal,buyDate,curDate].forEach(inp=>inp.addEventListener('input',upd));
+  body.append(
+    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'ประเภทสินทรัพย์'),typeSel),el('div',{class:'fld'},el('label',{},'จำนวนหน่วย'),units)),
+    el('div',{class:'fld'},el('label',{},'ชื่อสินทรัพย์'),name),
+    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'วันที่ซื้อ'),buyDate),el('div',{class:'fld'},el('label',{},'ราคา ณ วันซื้อ (บาท)'),buyPrice)),
+    el('div',{class:'fld'},el('label',{},'ค่าธรรมเนียม/ค่าใช้จ่ายอื่น (บาท)'),fee,feeHint),
+    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'มูลค่า ณ วันที่'),curDate),el('div',{class:'fld'},el('label',{},'มูลค่าปัจจุบัน (บาท)'),curVal)),
+    el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note),
+    el('div',{class:'fld'},el('label',{},'ผลตอบแทนโดยประมาณ'),preview));
+  upd();
+  m.append(body);
+  const foot=el('div',{class:'modal-foot'});
+  if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบการลงทุนนี้?')){await Store.remove('investments',existing.id);toast('ลบแล้ว');closeModal();render();}}},'ลบ'));
+  foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),el('button',{class:'btn btn-dark',onclick:async()=>{
+    if(!name.value.trim()){toast('กรุณาใส่ชื่อสินทรัพย์');return;}
+    const payload={asset_type:typeSel.value,asset_name:name.value.trim(),units:units.value.trim(),buy_date:buyDate.value,buy_price:Number(buyPrice.value||0),fee:Number(fee.value||0),current_value:Number(curVal.value||0),current_date:curDate.value,note:note.value.trim(),created_by:App.user.username};
+    if(existing)await Store.update('investments',existing.id,payload);else await Store.insert('investments',payload);
+    toast('บันทึกแล้ว');closeModal();render();
+  }},'บันทึก'));m.append(foot);showModal(bg);
+}
+
+/* ===== MODAL: ค้ำประกัน ===== */
+function openGuaranteeModal(existing){
+  const x=existing||{beneficiary:'',guarantee_type:'name',asset_desc:'',facility_amount:'',fee_type:'percent',fee_rate:'',fee_amount:'',start_date:todayISO(),end_date:'',status:'active',note:''};
+  const {bg,m}=modal(existing?'แก้ไขการค้ำประกัน':'เพิ่มการค้ำประกัน');const body=el('div',{class:'modal-body'});
+  const bene=el('input',{type:'text',placeholder:'ธุรกิจ/บุคคลที่เราค้ำให้',value:x.beneficiary||''});
+  let gt=x.guarantee_type||'name';
+  const assetDesc=el('input',{type:'text',placeholder:'ทรัพย์สินส่วนตัวที่นำไปค้ำ เช่น โฉนดที่ดิน',value:x.asset_desc||''});
+  const assetWrap=el('div',{class:'fld'},el('label',{},'ทรัพย์สินที่ใช้ค้ำ'),assetDesc);
+  const gtSeg=segControl([['name','ใช้ชื่อส่วนตัวค้ำ'],['asset','ยืมทรัพย์สินส่วนตัวค้ำ']],gt,v=>{gt=v;assetWrap.style.display=gt==='asset'?'block':'none';});
+  assetWrap.style.display=gt==='asset'?'block':'none';
+  const face=el('input',{type:'number',inputmode:'decimal',placeholder:'วงเงินกู้ที่ค้ำ',value:x.facility_amount||''});
+  let ft=x.fee_type||'percent';
+  const feeRate=el('input',{type:'number',inputmode:'decimal',placeholder:'เช่น 2',value:x.fee_rate||''});
+  const feeAmt=el('input',{type:'number',inputmode:'decimal',placeholder:'บาท/ปี',value:x.fee_amount||''});
+  const rateWrap=el('div',{class:'fld'},el('label',{},'อัตราค่าค้ำ (% ต่อปีของวงเงิน)'),feeRate);
+  const amtWrap=el('div',{class:'fld'},el('label',{},'ค่าค้ำคงที่ (บาท/ปี)'),feeAmt);
+  const feeHint=el('div',{class:'field-help'},'');
+  function drawFee(){rateWrap.style.display=ft==='percent'?'block':'none';amtWrap.style.display=ft==='fixed'?'block':'none';const r=guaranteeCalc({facility_amount:face.value,fee_type:ft,fee_rate:feeRate.value,fee_amount:feeAmt.value});feeHint.textContent='ค่าค้ำประกันต่อปี ≈ '+money(r.annual)+' บาท';}
+  const ftSeg=segControl([['percent','ร้อยละต่อปี'],['fixed','จำนวนคงที่/ปี']],ft,v=>{ft=v;drawFee();});
+  [face,feeRate,feeAmt].forEach(i=>i.addEventListener('input',drawFee));
+  const start=el('input',{type:'date',value:x.start_date||todayISO()});
+  const end=el('input',{type:'date',value:x.end_date||''});
+  const statusSel=el('select',{});[['active','กำลังค้ำอยู่'],['closed','สิ้นสุดแล้ว']].forEach(([v,l])=>{const o=el('option',{value:v},l);if((x.status||'active')===v)o.selected=true;statusSel.append(o);});
+  const note=el('input',{type:'text',placeholder:'หมายเหตุ (ไม่บังคับ)',value:x.note||''});
+  body.append(
+    el('div',{class:'fld'},el('label',{},'ค้ำให้ใคร (ธุรกิจที่ได้รับการค้ำ)'),bene),
+    el('div',{class:'fld'},el('label',{},'รูปแบบการค้ำ'),gtSeg),assetWrap,
+    el('div',{class:'fld'},el('label',{},'วงเงินที่ค้ำ (บาท)'),face),
+    el('div',{class:'fld'},el('label',{},'วิธีคิดค่าค้ำ'),ftSeg),rateWrap,amtWrap,feeHint,
+    el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'วันที่เริ่มค้ำ'),start),el('div',{class:'fld'},el('label',{},'วันที่สิ้นสุด (ถ้ามี)'),end)),
+    el('div',{class:'fld'},el('label',{},'สถานะ'),statusSel),
+    el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note));
+  drawFee();
+  m.append(body);
+  const foot=el('div',{class:'modal-foot'});
+  if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบรายการนี้?')){await Store.remove('guarantees',existing.id);toast('ลบแล้ว');closeModal();render();}}},'ลบ'));
+  foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),el('button',{class:'btn btn-dark',onclick:async()=>{
+    if(!bene.value.trim()){toast('กรุณาระบุธุรกิจที่ค้ำให้');return;}
+    const payload={beneficiary:bene.value.trim(),guarantee_type:gt,asset_desc:gt==='asset'?assetDesc.value.trim():'',facility_amount:Number(face.value||0),fee_type:ft,fee_rate:ft==='percent'?Number(feeRate.value||0):0,fee_amount:ft==='fixed'?Number(feeAmt.value||0):0,start_date:start.value,end_date:end.value||null,status:statusSel.value,note:note.value.trim(),created_by:App.user.username};
+    if(existing)await Store.update('guarantees',existing.id,payload);else await Store.insert('guarantees',payload);
     toast('บันทึกแล้ว');closeModal();render();
   }},'บันทึก'));m.append(foot);showModal(bg);
 }
