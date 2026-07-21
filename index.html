@@ -886,6 +886,7 @@ async function renderDash(p){
   const incNet=incGross-wht;
   const expense=inMonth.filter(t=>t.kind==='expense').reduce((s,t)=>s+ +t.amount,0);
   const unpaid=tx.filter(t=>t.kind==='expense'&&!t.is_paid).reduce((s,t)=>s+ +t.amount,0);
+  const unknownAmtCount=tx.filter(t=>t.kind==='expense'&&!t.is_paid&&t.amount_unknown).length;
 
   p.append(el('div',{class:'updated'},'อัปเดตล่าสุด '+`${now.getDate()} ${TH_M[now.getMonth()]} ${now.getFullYear()+543} เวลา ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} น.`));
 
@@ -895,6 +896,7 @@ async function renderDash(p){
     kpi(incNet-expense>=0?'ink':'neg','คงเหลือสุทธิ',money(incNet-expense),'฿'),
     kpi('gold','ค้างจ่ายทั้งหมด',money(unpaid),'฿')));
 
+  if(unknownAmtCount>0) p.append(el('div',{class:'card',style:'margin-top:-8px;border-left:3px solid var(--amber)'},el('div',{class:'t-sub'},`⚠ มี ${unknownAmtCount} รายการที่ยังไม่ทราบยอดชำระที่แน่ชัด (ยอดค้างจ่ายด้านบนอาจต่ำกว่าความเป็นจริง) — ดูรายการที่การ์ด “ต้องดำเนินการ” ด้านล่าง`)));
   if(wht>0) p.append(el('div',{class:'card',style:'margin-top:-8px'},el('div',{class:'t-sub'},`รายรับก่อนหัก ${money(incGross)} บาท · หัก ณ ที่จ่ายเดือนนี้ ${money(wht)} บาท`)));
 
   // reminders
@@ -909,9 +911,10 @@ async function renderDash(p){
   else due.forEach(t=>{const d=daysUntil(t.txn_date);const late=d<=0;const when=d<0?`เลยกำหนด ${-d} วัน`:d===0?'ครบกำหนดวันนี้':`อีก ${d} วัน`;
     rc.append(el('div',{class:'reminder'},
       el('button',{class:'check',title:'ทำเครื่องหมายว่าจ่ายแล้ว',html:svg(I.check),onclick:async()=>{await Store.update('transactions',t.id,{is_paid:true,paid_date:todayISO()});toast('บันทึกว่าจ่ายแล้ว');render();}}),
-      el('div',{class:'rm-main'},el('div',{class:'rm-title'},(t.category||'ค่าใช้จ่าย')),el('div',{class:'rm-meta'},`${bizName(bizAll,t.business_id)} · ${fmtDate(t.txn_date)}`)),
+      el('div',{class:'rm-main'},el('div',{class:'rm-title'},(t.category||'ค่าใช้จ่าย')),el('div',{class:'rm-meta'},`${bizName(bizAll,t.business_id)} · ${fmtDate(t.txn_date)}`+(t.amount_unknown?' · ยังไม่ทราบยอดที่แน่ชัด':'')),
+        t.amount_unknown?el('div',{class:'chip c-unpaid',style:'margin-top:6px'},'รอทราบยอด — แจ้ง Owner'):''),
       el('div',{style:'text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px'},
-        el('div',{class:'num neg',style:'font-size:1.05rem'},money(t.amount)+' ฿'),
+        el('div',{class:'num neg',style:'font-size:1.05rem'},t.amount_unknown?(+t.amount>0?'~'+money(t.amount)+' ฿':'ยังไม่ทราบยอด'):money(t.amount)+' ฿'),
         el('div',{class:'rm-when'+(late?' late':'')},when),
         Settings.no_repeat_reminders?el('button',{class:'btn btn-ghost btn-sm',style:'padding:4px 10px;font-size:.74rem',onclick:()=>openSnoozeModal(t)},'เลื่อนจ่าย'):'')));
   });
@@ -1053,14 +1056,16 @@ async function renderTrans(p){
       const chk=el('button',{class:'check'+(t.is_paid?' done':''),title:isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ยังไม่ได้รับ'),html:svg(I.check),onclick:async()=>{const nv=!t.is_paid;await Store.update('transactions',t.id,{is_paid:nv,paid_date:nv?todayISO():null});toast(isE?(nv?'จ่ายแล้ว':'ยกเลิกการจ่าย'):(nv?'รับเงินแล้ว':'ยกเลิกรับเงิน'));renderTrans(p);}});
       const whtNote=(!isE&&+t.wht>0)?` · หัก ณ ที่จ่าย ${money(t.wht)} · สุทธิ ${money(txNet(t))}`:'';
       const dateTxt=(!isE&&!t.is_paid)?('คาดรับ '+fmtDate(t.txn_date)):fmtDate(t.txn_date);
+      const amtTxt=(isE&&t.amount_unknown)?(+t.amount>0?'~'+money(t.amount):'ยังไม่ทราบยอด'):((isE?'−':'+')+money(t.amount));
       bd.append(el('tr',{},
         el('td',{},chk),
         el('td',{},el('div',{class:'t-title'},t.category||(isE?'ค่าใช้จ่าย':'รายรับ')),el('div',{class:'t-sub'},`${bizName(bizAll,t.business_id)} · ${dateTxt}${whtNote}${t.note?' · '+t.note:''}`)),
         el('td',{},el('div',{style:'display:flex;gap:6px;flex-wrap:wrap'},
           el('span',{class:'chip '+(isE?'c-out':'c-in')},isE?'จ่าย':'รับ'),
           t.recurring_id?el('span',{class:'chip c-auto',title:'สร้างอัตโนมัติจากรายการประจำ'},'อัตโนมัติ'):el('span',{class:'chip '+(t.recurrence==='monthly'?'c-monthly':'c-once')},t.recurrence==='monthly'?'ทุกเดือน':'ครั้งเดียว'),
-          el('span',{class:'chip '+(t.is_paid?'c-paid':'c-unpaid')},isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ค้างรับ')))),
-        el('td',{class:'num '+(isE?'neg':'pos')},(isE?'−':'+')+money(t.amount)),
+          el('span',{class:'chip '+(t.is_paid?'c-paid':'c-unpaid')},isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ค้างรับ')),
+          (isE&&t.amount_unknown)?el('span',{class:'chip c-unpaid',title:'ยังไม่ทราบยอดชำระที่แน่ชัด'},'รอทราบยอด'):'')),
+        el('td',{class:'num '+(isE?'neg':'pos')},amtTxt),
         el('td',{style:'text-align:right'},el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openTxnModal(biz,t)},'แก้ไข'))));
     });
     tb.append(bd);lc.append(tb);
@@ -1105,6 +1110,18 @@ function openTxnModal(biz,existing){
   const paidBtn=el('button',{class:'pchip'+(paid?' sel':''),onclick:()=>{paid=!paid;paidBtn.className='pchip'+(paid?' sel':'');paidBtn.textContent=paid?'✓ จ่ายแล้ว':'ยังไม่จ่าย';}},paid?'✓ จ่ายแล้ว':'ยังไม่จ่าย');
   paidWrap.append(el('label',{},'สถานะการจ่าย'),paidBtn);
 
+  // ยังไม่ทราบยอดชำระที่แน่ชัด (expense only) — เช่น บัตรเครดิตที่ยังไม่ได้รับใบแจ้งหนี้
+  let amtUnknown=!!t.amount_unknown;
+  const amtUnknownWrap=el('div',{class:'fld'});
+  const amtUnknownBtn=el('button',{class:'pchip'+(amtUnknown?' sel':''),onclick:()=>{
+    amtUnknown=!amtUnknown;
+    amtUnknownBtn.className='pchip'+(amtUnknown?' sel':'');
+    amtUnknownBtn.textContent=amtUnknown?'✓ ยังไม่ทราบยอดชำระที่แน่ชัด':'ทราบยอดแล้ว';
+    amt.placeholder=amtUnknown?'กรอกยอดโดยประมาณได้ (ไม่บังคับ)':'0.00';
+  }},amtUnknown?'✓ ยังไม่ทราบยอดชำระที่แน่ชัด':'ทราบยอดแล้ว');
+  amtUnknownWrap.append(el('label',{},'กรณียังไม่ทราบยอด'),amtUnknownBtn,
+    el('div',{class:'field-help',style:'margin-top:6px'},'ใช้กับรายการที่ยังไม่รู้ยอดแน่ชัด เช่น บัตรเครดิตที่ยังไม่ได้รับใบแจ้งหนี้ — จะใส่ยอดประมาณการหรือเว้นว่างไว้ก่อนก็ได้ ระบบจะแจ้ง Owner ว่ารายการนี้รอทราบยอด'));
+
   // received (income only) — เงินค้างรับ
   let received = existing ? !!t.is_paid : true;
   const recvWrap=el('div',{class:'fld'});
@@ -1112,16 +1129,17 @@ function openTxnModal(biz,existing){
   recvWrap.append(el('label',{},'สถานะการรับเงิน'),recvBtn,el('div',{class:'field-help',style:'margin-top:6px'},'ถ้ายังเก็บเงินไม่ครบ เลือก “ยังไม่ได้รับ” แล้วใส่ยอดที่ค้างและวันที่คาดว่าจะได้รับ'));
 
   function updateDateLabel(){dateLabel.textContent = kind==='income' ? (received?'วันที่รับเงิน':'วันที่คาดว่าจะได้รับ') : 'วันที่ / กำหนดจ่าย';}
-  function toggleKindUI(){paidWrap.style.display=kind==='expense'?'block':'none';recvWrap.style.display=kind==='income'?'block':'none';whtWrap.style.display=kind==='income'?'block':'none';updateDateLabel();}
+  function toggleKindUI(){paidWrap.style.display=kind==='expense'?'block':'none';amtUnknownWrap.style.display=kind==='expense'?'block':'none';recvWrap.style.display=kind==='income'?'block':'none';whtWrap.style.display=kind==='income'?'block':'none';updateDateLabel();}
 
   drawCats();toggleKindUI();
+  amt.placeholder=(kind==='expense'&&amtUnknown)?'กรอกยอดโดยประมาณได้ (ไม่บังคับ)':'0.00';
   body.append(
     el('div',{class:'fld'},el('label',{},'ประเภท'),seg),
     el('div',{class:'fld'},el('label',{},'ธุรกิจ'),bizSel),
     el('div',{class:'fld'},el('label',{},'หมวด / รายการ'),catChips,catInput),
     el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'จำนวนเงิน (บาท)'),amt),el('div',{class:'fld'},dateLabel,date)),
     el('div',{class:'field-help',style:'margin:-8px 0 12px'},'เลือกวันในอนาคตเพื่อกรอกล่วงหน้าได้ (ไม่จำกัดจำนวนวัน)'),
-    whtWrap, recvWrap, paidWrap,
+    whtWrap, recvWrap, paidWrap, amtUnknownWrap,
     el('div',{class:'fld'},el('label',{},'รูปแบบ'),recSeg),
     el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note));
   m.append(body);
@@ -1129,9 +1147,11 @@ function openTxnModal(biz,existing){
   if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบรายการนี้?')){await Store.remove('transactions',existing.id);toast('ลบแล้ว');closeModal();render();}}},'ลบ'));
   foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),
     el('button',{class:'btn btn-dark',onclick:async()=>{
-      const a=Number(amt.value);if(!a||a<=0){toast('กรุณาใส่จำนวนเงิน');return;}
+      const skipAmt=(kind==='expense'&&amtUnknown);
+      const a=Number(amt.value)||0;
+      if(!skipAmt&&(!a||a<=0)){toast('กรุณาใส่จำนวนเงิน');return;}
       const w=(kind==='income'&&hasWht)?Number(whtAmt.value||0):0;
-      const payload={kind,business_id:bizSel.value,category:catInput.value.trim()||(kind==='expense'?'ค่าใช้จ่าย':'รายรับ'),amount:a,wht:w,txn_date:date.value,recurrence:rec,note:note.value.trim(),is_paid:kind==='expense'?paid:received,paid_date:kind==='expense'?(paid?todayISO():null):(received?date.value:null),created_by:App.user.username};
+      const payload={kind,business_id:bizSel.value,category:catInput.value.trim()||(kind==='expense'?'ค่าใช้จ่าย':'รายรับ'),amount:a,wht:w,txn_date:date.value,recurrence:rec,note:note.value.trim(),is_paid:kind==='expense'?paid:received,paid_date:kind==='expense'?(paid?todayISO():null):(received?date.value:null),amount_unknown:skipAmt,created_by:App.user.username};
       if(existing)await Store.update('transactions',existing.id,payload);else await Store.insert('transactions',payload);
       toast('บันทึกแล้ว');closeModal();render();
     }},'บันทึก'));
