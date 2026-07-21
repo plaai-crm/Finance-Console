@@ -405,7 +405,7 @@ const REMIND_DAYS=3; // ค่าเริ่มต้น (จำนวนวั
 // การตั้งค่าแจ้งเตือน — โหลดจากคลาวด์ (LINE) หรือเครื่อง แล้วใช้ทั้งในแอปและ LINE ให้ตรงกัน
 const Settings={remind_days:REMIND_DAYS,reminder_message:'',send_when_empty:false,line_enabled:true,
   show_date:true,show_divider:true,show_business:false,show_total:true,compact:true,
-  show_days_left:true,monthly_summary_enabled:false};
+  show_days_left:true,monthly_summary_enabled:false,no_repeat_reminders:true};
 const EXPENSE_SUGGEST=['ค่าน้ำ','ค่าไฟ','เงินเดือนพนักงาน','เงินเดือนแม่บ้าน','ค่าซื้อของ/วัตถุดิบ','ค่าผ่อนรถ','ค่าน้ำมัน','ค่าบำรุงรักษา','ค่าอินเทอร์เน็ต','ค่าเช่า','ภาษี/ค่าธรรมเนียม','อื่น ๆ'];
 const INCOME_SUGGEST=['ค่าเช่าห้อง','ค่าเช่าตึก','เงินเดือน','รายได้ซักรีด','รายได้คลีนนิ่ง','รายได้ขายบ้าน','ค่าน้ำ/ค่าไฟจากผู้เช่า','อื่น ๆ'];
 const BANK_SUGGEST=['กสิกรไทย','ไทยพาณิชย์ (SCB)','กรุงเทพ (BBL)','กรุงไทย (KTB)','กรุงศรี (BAY)','ทีทีบี (ttb)','เงินสด'];
@@ -481,6 +481,7 @@ async function loadSettings(){
         Settings.compact=data.compact!==false;
         Settings.show_days_left=data.show_days_left!==false;
         Settings.monthly_summary_enabled=!!data.monthly_summary_enabled;
+        Settings.no_repeat_reminders=data.no_repeat_reminders!==false;
       }
     }else{
       const s=JSON.parse(localStorage.getItem('fc_settings')||'null');
@@ -496,6 +497,7 @@ async function loadSettings(){
         Settings.compact=s.compact!==false;
         Settings.show_days_left=s.show_days_left!==false;
         Settings.monthly_summary_enabled=!!s.monthly_summary_enabled;
+        Settings.no_repeat_reminders=s.no_repeat_reminders!==false;
       }
     }
   }catch(e){/* ยังไม่ได้ติดตั้ง LINE — ใช้ค่าเริ่มต้น */}
@@ -514,6 +516,7 @@ async function saveSettings(vals){
   Settings.compact=vals.compact!==false;
   Settings.show_days_left=vals.show_days_left!==false;
   Settings.monthly_summary_enabled=!!vals.monthly_summary_enabled;
+  Settings.no_repeat_reminders=vals.no_repeat_reminders!==false;
   if(USE_CLOUD){
     const {error}=await sb.rpc('fc_set_line_settings',{
       p_remind_days:Settings.remind_days,
@@ -526,7 +529,8 @@ async function saveSettings(vals){
       p_show_total:Settings.show_total,
       p_compact:Settings.compact,
       p_show_days_left:Settings.show_days_left,
-      p_monthly_summary_enabled:Settings.monthly_summary_enabled
+      p_monthly_summary_enabled:Settings.monthly_summary_enabled,
+      p_no_repeat_reminders:Settings.no_repeat_reminders
     });
     if(error)throw error;
   }else{
@@ -535,7 +539,8 @@ async function saveSettings(vals){
       send_when_empty:Settings.send_when_empty,line_enabled:Settings.line_enabled,
       show_date:Settings.show_date,show_divider:Settings.show_divider,
       show_business:Settings.show_business,show_total:Settings.show_total,compact:Settings.compact,
-      show_days_left:Settings.show_days_left,monthly_summary_enabled:Settings.monthly_summary_enabled
+      show_days_left:Settings.show_days_left,monthly_summary_enabled:Settings.monthly_summary_enabled,
+      no_repeat_reminders:Settings.no_repeat_reminders
     }));
   }
 }
@@ -831,6 +836,46 @@ const bizName=(all,id)=>{const b=all.find(x=>x.id===id);return b?b.name:'—';};
 function emptyBox(text){return el('div',{class:'empty',html:svg(I.doc)+'<div>'+text+'</div>'});}
 function kpi(kind,k,v,u){return el('div',{class:'kpi '+kind},el('span',{class:'bar'}),el('div',{class:'k'},k),el('div',{class:'v mono-num'},v,' ',el('span',{class:'u'},u)));}
 
+/* ---------- ไม่แจ้งเตือนซ้ำ + เลื่อนจ่าย ----------
+   รายการที่เคยขึ้นแจ้งเตือนแล้ว (ไม่ว่าจะจ่ายแล้วหรือยังไม่จ่าย) จะไม่โผล่ในการ์ด "ต้องดำเนินการ" อีก
+   จนกว่าจะถูก "เลื่อนจ่าย" ไปเป็นวันใหม่ แล้ววันนั้นมาถึง จึงจะกลับมาแจ้งเตือนอีกครั้ง */
+function reminderActive(t){
+  if(!Settings.no_repeat_reminders)return true;
+  const today=todayISO();
+  if(t.reminder_snooze_until)return t.reminder_snooze_until<=today;
+  return !t.reminder_notified_at;
+}
+// ทำเครื่องหมายว่ารายการเหล่านี้ถูกแจ้งเตือนแล้ว ณ วันนี้ (อัปเดตวันที่ให้เป็นปัจจุบันเสมอ) — ทำงานเบื้องหลัง ไม่บล็อกหน้าจอ
+async function markReminded(list){
+  if(!Settings.no_repeat_reminders)return;
+  const today=todayISO();
+  for(const t of list){
+    if(t.reminder_notified_at===today&&!t.reminder_snooze_until)continue;
+    try{
+      await Store.update('transactions',t.id,{reminder_notified_at:today,reminder_snooze_until:null});
+      t.reminder_notified_at=today;t.reminder_snooze_until=null;
+    }catch(e){/* ยังไม่ได้เพิ่มคอลัมน์ reminder_notified_at/reminder_snooze_until บนฐานข้อมูล — ข้ามไปก่อน */}
+  }
+}
+function openSnoozeModal(t){
+  const {bg,m}=modal('เลื่อนจ่าย',(t.category||'ค่าใช้จ่าย')+' — เลือกวันที่จะให้แจ้งเตือนอีกครั้ง');
+  const body=el('div',{class:'modal-body'});
+  const dateInp=el('input',{type:'date',value:t.reminder_snooze_until||t.txn_date||todayISO(),min:todayISO()});
+  body.append(el('div',{class:'fld'},el('label',{},'แจ้งเตือนอีกครั้งวันที่'),dateInp,
+    el('div',{class:'field-help'},'ตั้งแต่ตอนนี้จนถึงวันที่เลือก รายการนี้จะไม่ขึ้นในการ์ด “ต้องดำเนินการ” · พอถึงวันที่กำหนดจะกลับมาแจ้งเตือนอีกครั้งโดยอัตโนมัติ')));
+  m.append(body);
+  const foot=el('div',{class:'modal-foot'});
+  foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),
+    el('button',{class:'btn btn-dark',onclick:async()=>{
+      if(!dateInp.value){toast('กรุณาเลือกวันที่');return;}
+      try{
+        await Store.update('transactions',t.id,{reminder_snooze_until:dateInp.value});
+        toast('เลื่อนแจ้งเตือนแล้ว');closeModal();render();
+      }catch(e){toast('บันทึกไม่สำเร็จ — ต้องเพิ่มคอลัมน์ในฐานข้อมูลก่อน (ดูคู่มือ)');}
+    }},'บันทึก'));
+  m.append(foot);showModal(bg);
+}
+
 /* ---------- DASHBOARD (สรุปผู้บริหาร, ดูอย่างเดียว) ---------- */
 async function renderDash(p){
   const {bizAll,biz,tx}=await loadScoped();p.innerHTML='';
@@ -853,7 +898,9 @@ async function renderDash(p){
   if(wht>0) p.append(el('div',{class:'card',style:'margin-top:-8px'},el('div',{class:'t-sub'},`รายรับก่อนหัก ${money(incGross)} บาท · หัก ณ ที่จ่ายเดือนนี้ ${money(wht)} บาท`)));
 
   // reminders
-  const due=tx.filter(t=>t.kind==='expense'&&!t.is_paid&&daysUntil(t.txn_date)<=Settings.remind_days).sort((a,b)=>a.txn_date.localeCompare(b.txn_date));
+  const allDue=tx.filter(t=>t.kind==='expense'&&!t.is_paid&&daysUntil(t.txn_date)<=Settings.remind_days).sort((a,b)=>a.txn_date.localeCompare(b.txn_date));
+  const due=allDue.filter(reminderActive);
+  const snoozedCount=allDue.length-due.length;
   const rc=el('div',{class:'card'});
   rc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'ต้องดำเนินการ'),el('h2',{},`รายการที่ต้องจ่ายภายใน ${Settings.remind_days} วัน`)),
     due.length?el('span',{class:'chip c-unpaid'},due.length+' รายการ'):el('span',{class:'chip c-paid'},'ครบแล้ว')));
@@ -863,9 +910,14 @@ async function renderDash(p){
     rc.append(el('div',{class:'reminder'},
       el('button',{class:'check',title:'ทำเครื่องหมายว่าจ่ายแล้ว',html:svg(I.check),onclick:async()=>{await Store.update('transactions',t.id,{is_paid:true,paid_date:todayISO()});toast('บันทึกว่าจ่ายแล้ว');render();}}),
       el('div',{class:'rm-main'},el('div',{class:'rm-title'},(t.category||'ค่าใช้จ่าย')),el('div',{class:'rm-meta'},`${bizName(bizAll,t.business_id)} · ${fmtDate(t.txn_date)}`)),
-      el('div',{style:'text-align:right'},el('div',{class:'num neg',style:'font-size:1.05rem'},money(t.amount)+' ฿'),el('div',{class:'rm-when'+(late?' late':'')},when))));
+      el('div',{style:'text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px'},
+        el('div',{class:'num neg',style:'font-size:1.05rem'},money(t.amount)+' ฿'),
+        el('div',{class:'rm-when'+(late?' late':'')},when),
+        Settings.no_repeat_reminders?el('button',{class:'btn btn-ghost btn-sm',style:'padding:4px 10px;font-size:.74rem',onclick:()=>openSnoozeModal(t)},'เลื่อนจ่าย'):'')));
   });
+  if(Settings.no_repeat_reminders&&snoozedCount>0)rc.append(el('div',{class:'field-help',style:'margin-top:6px'},`มี ${snoozedCount} รายการที่เคยแจ้งเตือนแล้ว/เลื่อนไว้ยังไม่ถึงกำหนด จึงไม่แสดงซ้ำในตอนนี้`));
   p.append(rc);
+  markReminded(due);
 
   // ---- เงินค้างรับ (accounts receivable) แยกตามเดือน ----
   {
@@ -1977,6 +2029,13 @@ async function renderSettings(p){
       el('div',{class:'field-help'},'ใช้ทั้งการแจ้งเตือนในหน้าแดชบอร์ด และสรุปที่ส่งเข้า LINE ทุกเช้า (กรอก 0 = เฉพาะที่ครบกำหนดวันนี้/เลยกำหนด)')),
     el('div',{class:'fld'},el('label',{},'ข้อความแจ้งเตือน (พิมพ์เอง)'),msgInp,
       el('div',{class:'field-help'},'ข้อความนี้จะขึ้นเป็นหัวข้อความแจ้งเตือนทั้งในแอปและ LINE · เว้นว่างไว้จะใช้ข้อความมาตรฐาน')));
+  // ตัวเลือก: ไม่แจ้งเตือนซ้ำรายการเดิม (มีผลทั้งการ์ด "ต้องดำเนินการ" ในแอป และข้อความ LINE ทุกเช้า)
+  let noRepeatOn=Settings.no_repeat_reminders;
+  const noRepeatBtn=el('button',{class:'pchip'+(noRepeatOn?' sel':''),
+    onclick:()=>{noRepeatOn=!noRepeatOn;noRepeatBtn.className='pchip'+(noRepeatOn?' sel':'');noRepeatBtn.textContent=noRepeatOn?'✓ ไม่แจ้งเตือนซ้ำรายการเดิม':'แจ้งเตือนซ้ำทุกวันจนกว่าจะจ่าย';}
+  },noRepeatOn?'✓ ไม่แจ้งเตือนซ้ำรายการเดิม':'แจ้งเตือนซ้ำทุกวันจนกว่าจะจ่าย');
+  lc.append(el('div',{class:'fld'},el('label',{},'รายการที่แจ้งเตือนแล้ว'),noRepeatBtn,
+    el('div',{class:'field-help',style:'margin-top:6px'},'เมื่อเปิด: รายการที่เคยขึ้นแจ้งเตือนแล้ว (ทั้งในแอปและ LINE) จะไม่แจ้งซ้ำอีก ไม่ว่าจะจ่ายแล้วหรือยังไม่จ่าย · ถ้าต้องการให้เตือนอีกครั้ง ให้กด “เลื่อนจ่าย” ที่รายการนั้นแล้วเลือกวันที่ใหม่ พอถึงวันนั้นระบบจะแจ้งเตือนให้อีกครั้งโดยอัตโนมัติ · กด “บันทึกการตั้งค่า” ด้านล่างเพื่อให้มีผล')));
   // รูปแบบข้อความ LINE (ปรับได้เอง)
   lc.append(el('div',{class:'fld'},el('label',{},'รูปแบบข้อความ LINE'),
     el('div',{style:'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px'},
@@ -2007,7 +2066,7 @@ async function renderSettings(p){
   actions.append(el('button',{class:'btn btn-dark',html:svg(I.check)+'บันทึกการตั้งค่า',onclick:async()=>{
     const d=Number(daysInp.value);
     if(!(d>=0&&d<=60)){toast('กรุณาใส่จำนวนวัน 0–60');return;}
-    try{await saveSettings({remind_days:d,reminder_message:msgInp.value.trim(),send_when_empty:sendEmpty,line_enabled:lineOn,show_date:fmt.show_date,show_divider:fmt.show_divider,show_business:fmt.show_business,show_total:fmt.show_total,compact:fmt.compact,show_days_left:fmt.show_days_left,monthly_summary_enabled:monthlyOn});toast('บันทึกการตั้งค่าแล้ว');renderSettings(p);}
+    try{await saveSettings({remind_days:d,reminder_message:msgInp.value.trim(),send_when_empty:sendEmpty,line_enabled:lineOn,show_date:fmt.show_date,show_divider:fmt.show_divider,show_business:fmt.show_business,show_total:fmt.show_total,compact:fmt.compact,show_days_left:fmt.show_days_left,monthly_summary_enabled:monthlyOn,no_repeat_reminders:noRepeatOn});toast('บันทึกการตั้งค่าแล้ว');renderSettings(p);}
     catch(e){toast('บันทึกในแอปแล้ว แต่ซิงก์ LINE ไม่สำเร็จ — ยังไม่ได้ติดตั้งไฟล์ LINE (ดูคู่มือ)');}
   }},'บันทึกการตั้งค่า'));
   if(USE_CLOUD)actions.append(el('button',{class:'btn btn-ghost',onclick:async()=>{
