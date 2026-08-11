@@ -1101,22 +1101,45 @@ async function renderTrans(p){
     tb.append(el('thead',{},el('tr',{},el('th',{style:'width:34px'},''),el('th',{},'รายการ'),el('th',{},'สถานะ'),el('th',{style:'text-align:right'},'จำนวน'),el('th',{style:'width:70px'},''))));
     const bd=el('tbody',{});
     rows.forEach(t=>{const isE=t.kind==='expense';
-      const chk=el('button',{class:'check'+(t.is_paid?' done':''),title:isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ยังไม่ได้รับ'),html:svg(I.check),onclick:async()=>{const nv=!t.is_paid;await Store.update('transactions',t.id,{is_paid:nv,paid_date:nv?todayISO():null});toast(isE?(nv?'จ่ายแล้ว':'ยกเลิกการจ่าย'):(nv?'รับเงินแล้ว':'ยกเลิกรับเงิน'));renderTrans(p);}});
       const whtNote=(!isE&&+t.wht>0)?` · หัก ณ ที่จ่าย ${money(t.wht)} · สุทธิ ${money(txNet(t))}`:'';
-      const dateTxt=(!isE&&!t.is_paid)?('คาดรับ '+fmtDate(t.txn_date)):fmtDate(t.txn_date);
+      const meta=el('div',{class:'t-sub'});
+      const drawMeta=()=>{const dateTxt=(!isE&&!t.is_paid)?('คาดรับ '+fmtDate(t.txn_date)):fmtDate(t.txn_date);meta.textContent=`${bizName(bizAll,t.business_id)} · ${dateTxt}${whtNote}${t.note?' · '+t.note:''}`;};
+      drawMeta();
       const amtTxt=(isE&&t.amount_unknown)?(+t.amount>0?'~'+money(t.amount):'ยังไม่ทราบยอด'):((isE?'−':'+')+money(t.amount));
+      const statusChip=el('span',{class:'chip '+(t.is_paid?'c-paid':'c-unpaid')},isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ค้างรับ'));
+      let saving=false;
+      const chk=el('button',{class:'check'+(t.is_paid?' done':''),type:'button',title:'',html:svg(I.check)});
+      const drawCheck=()=>{
+        chk.className='check'+(t.is_paid?' done':'');
+        chk.title=isE?(t.is_paid?'กดเพื่อเปลี่ยนกลับเป็น “ยังไม่จ่าย”':'กดเพื่อบันทึกว่า “จ่ายแล้ว”'):(t.is_paid?'กดเพื่อเปลี่ยนกลับเป็น “ยังไม่ได้รับ”':'กดเพื่อบันทึกว่า “รับเงินแล้ว”');
+        chk.setAttribute('aria-label',chk.title);chk.setAttribute('aria-pressed',String(!!t.is_paid));
+        statusChip.className='chip '+(t.is_paid?'c-paid':'c-unpaid');
+        statusChip.textContent=isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ค้างรับ');
+      };
+      drawCheck();
+      chk.addEventListener('click',async()=>{
+        if(saving)return;saving=true;chk.disabled=true;
+        const old=!!t.is_paid,nv=!old;statusChip.textContent='กำลังบันทึก…';
+        try{
+          await Store.update('transactions',t.id,{is_paid:nv,paid_date:nv?todayISO():null});
+          t.is_paid=nv;drawCheck();drawMeta();
+          toast(isE?(nv?'บันทึกแล้ว: จ่ายแล้ว':'เปลี่ยนกลับแล้ว: ยังไม่จ่าย'):(nv?'บันทึกแล้ว: รับเงินแล้ว':'เปลี่ยนกลับแล้ว: ยังไม่ได้รับ'));
+        }catch(e){t.is_paid=old;drawCheck();toast('บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง');}
+        finally{saving=false;chk.disabled=false;}
+      });
       bd.append(el('tr',{},
         el('td',{},chk),
-        el('td',{},el('div',{class:'t-title'},t.category||(isE?'ค่าใช้จ่าย':'รายรับ')),el('div',{class:'t-sub'},`${bizName(bizAll,t.business_id)} · ${dateTxt}${whtNote}${t.note?' · '+t.note:''}`)),
+        el('td',{},el('div',{class:'t-title'},t.category||(isE?'ค่าใช้จ่าย':'รายรับ')),meta),
         el('td',{},el('div',{style:'display:flex;gap:6px;flex-wrap:wrap'},
           el('span',{class:'chip '+(isE?'c-out':'c-in')},isE?'จ่าย':'รับ'),
           t.recurring_id?el('span',{class:'chip c-auto',title:'สร้างอัตโนมัติจากรายการประจำ'},'อัตโนมัติ'):el('span',{class:'chip '+(t.recurrence==='monthly'?'c-monthly':'c-once')},t.recurrence==='monthly'?'ทุกเดือน':'ครั้งเดียว'),
-          el('span',{class:'chip '+(t.is_paid?'c-paid':'c-unpaid')},isE?(t.is_paid?'จ่ายแล้ว':'ยังไม่จ่าย'):(t.is_paid?'ได้รับแล้ว':'ค้างรับ')),
+          statusChip,
           (isE&&t.amount_unknown)?el('span',{class:'chip c-unpaid',title:'ยังไม่ทราบยอดชำระที่แน่ชัด'},'รอทราบยอด'):'')),
         el('td',{class:'num '+(isE?'neg':'pos')},amtTxt),
         el('td',{style:'text-align:right'},el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openTxnModal(biz,t)},'แก้ไข'))));
     });
     tb.append(bd);lc.append(tb);
+    lc.append(el('div',{class:'field-help',style:'margin-top:10px'},'กดช่องสี่เหลี่ยมด้านซ้ายเพื่อเปลี่ยนเป็น “จ่ายแล้ว/รับแล้ว” · แถวจะอยู่ที่เดิม และกดซ้ำเพื่อย้อนกลับได้'));
   }
   p.append(lc);
 }
