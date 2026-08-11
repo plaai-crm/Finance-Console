@@ -2229,19 +2229,21 @@ async function renderSettings(p){
   msgInp.value=Settings.reminder_message||'';
   // ---- รูปแบบข้อความ + พรีวิวสด (ปรับได้จากเว็บ เห็นผลทันที) ----
   const fmt={show_date:Settings.show_date,show_divider:Settings.show_divider,show_business:Settings.show_business,show_total:Settings.show_total,compact:Settings.compact,show_days_left:Settings.show_days_left};
-  let previewItems=[];
+  let previewSource=[];
+  let previewBizMap={};
   try{
-    const txAll=await Store.list('transactions');
-    const bmap=Object.fromEntries(bizAll.map(b=>[b.id,b.name]));
-    previewItems=txAll.filter(t=>t.kind==='expense'&&!t.is_paid&&daysUntil(t.txn_date)<=Settings.remind_days)
-      .sort((a,b)=>(a.txn_date||'').localeCompare(b.txn_date||''))
-      .map(t=>({category:t.category||'รายจ่าย',biz:bmap[t.business_id]||'—',amount:t.amount,amount_unknown:!!t.amount_unknown,dleft:daysUntil(t.txn_date),txn_date:t.txn_date}));
+    previewSource=await Store.list('transactions');
+    previewBizMap=Object.fromEntries(bizAll.map(b=>[b.id,b.name]));
   }catch(e){}
-  const usingSample=!previewItems.length;
-  if(usingSample)previewItems=[
-    {category:'ค่าน้ำ',biz:'ซักรีด',amount:1200,dleft:2,txn_date:null},
-    {category:'เงินเดือนพนักงาน',biz:'คลีนนิ่ง',amount:18000,dleft:0,txn_date:null}
-  ];
+  const previewItemsForDay=()=>{
+    const remindDays=Math.max(0,Number(daysInp.value)||0),today=todayISO();
+    return previewSource.filter(t=>t.kind==='expense'&&!t.is_paid&&(
+      t.reminder_snooze_until
+        ?String(t.reminder_snooze_until).slice(0,10)===today
+        :daysUntil(t.txn_date)===remindDays
+    )).sort((a,b)=>(a.txn_date||'').localeCompare(b.txn_date||''))
+      .map(t=>({category:t.category||'รายจ่าย',biz:previewBizMap[t.business_id]||'—',amount:t.amount,amount_unknown:!!t.amount_unknown,dleft:daysUntil(t.txn_date),txn_date:t.txn_date}));
+  };
   // ---- รายการสำหรับพรีวิว "สรุปสิ้นเดือน" = ทุกรายจ่ายของเดือนนี้ ----
   const curYM=todayISO().slice(0,7);
   let monthlyItems=[];
@@ -2258,8 +2260,9 @@ async function renderSettings(p){
     {category:'เงินเดือนพนักงาน',biz:'ซักรีด',amount:18000,txn_date:curYM+'-28'}
   ];
   const previewBox=el('pre',{style:'white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:.92rem;line-height:1.55;margin:0;background:#eaf6ea;border:1px solid #cfe6cf;border-left:3px solid #06c755;border-radius:12px;padding:14px 16px;color:#14321f'});
-  const refreshPreview=()=>{previewBox.textContent=buildLineMessage({reminder_message:msgInp.value,show_date:fmt.show_date,show_divider:fmt.show_divider,show_business:fmt.show_business,show_total:fmt.show_total,compact:fmt.compact,show_days_left:fmt.show_days_left},previewItems);};
+  const refreshPreview=()=>{previewBox.textContent=buildLineMessage({reminder_message:msgInp.value,show_date:fmt.show_date,show_divider:fmt.show_divider,show_business:fmt.show_business,show_total:fmt.show_total,compact:fmt.compact,show_days_left:fmt.show_days_left},previewItemsForDay());};
   msgInp.addEventListener('input',refreshPreview);
+  daysInp.addEventListener('input',refreshPreview);
   const fmtChip=(key,label)=>{const b=el('button',{class:'pchip'+(fmt[key]?' sel':''),onclick:()=>{fmt[key]=!fmt[key];b.className='pchip'+(fmt[key]?' sel':'');refreshPreview();if(typeof refreshMonthly==='function')refreshMonthly();}},label);return b;};
   const compactSeg=segControl([['1','กระชับ (รายการละบรรทัด)'],['0','ละเอียด (2 บรรทัด)']],fmt.compact?'1':'0',v=>{fmt.compact=(v==='1');refreshPreview();});
   // ปุ่มสลับตัวเลือก LINE
@@ -2295,7 +2298,7 @@ async function renderSettings(p){
     el('div',{class:'field-help',style:'margin-top:8px'},'ติ๊กเลือกสิ่งที่อยากให้แสดง แล้วดูผลได้จากตัวอย่างด้านล่างทันที')));
   // ตัวอย่างข้อความจริง (พรีวิวสด)
   lc.append(el('div',{class:'fld'},
-    el('label',{},'ตัวอย่างข้อความที่จะส่งเข้า LINE'+(usingSample?' (ข้อมูลตัวอย่าง)':' (จากรายการค้างจริง)')),
+    el('label',{},'ตัวอย่างข้อความที่จะส่งเข้า LINE (เฉพาะรายการที่ถึงรอบวันนี้)'),
     previewBox,
     el('div',{class:'field-help',style:'margin-top:6px'},'พรีวิวนี้อัปเดตตามที่คุณพิมพ์และติ๊ก · กด “บันทึกการตั้งค่า” เพื่อให้มีผลกับ LINE จริง')));
   refreshPreview();
