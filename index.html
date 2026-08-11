@@ -603,23 +603,26 @@ const fmtMoneyExact=n=>{
   const v=Number(n||0);
   return v.toLocaleString('en-US',{minimumFractionDigits:Number.isInteger(v)?0:2,maximumFractionDigits:2});
 };
-function buildMonthlyExpenseGroupMessage(items,ym,customMessage){
-  const p=(ym||todayISO().slice(0,7)).split('-').map(Number);
-  const Y=p[0],M=p[1];
+function buildMonthlyExpenseGroupMessage(items,ym,customMessage,remindDays=0,referenceDate){
+  const base=referenceDate?new Date(referenceDate+'T00:00:00'):new Date();
+  const target=new Date(base);target.setDate(target.getDate()+Math.max(0,Number(remindDays)||0));
+  const Y=target.getFullYear(),M=target.getMonth()+1,D=target.getDate();
   const wantedYM=`${Y}-${String(M).padStart(2,'0')}`;
-  const payDay=r=>r.recurrence==='once'&&r.due_date?Number(String(r.due_date).slice(8,10)):+r.pay_day;
+  const targetISO=`${wantedYM}-${String(D).padStart(2,'0')}`;
+  const lastDay=new Date(Y,M,0).getDate();
+  const effectiveDay=r=>Math.min(Math.max(1,Number(r.pay_day)||1),lastDay);
   const active=(items||[])
     .filter(r=>r.active!==false&&(r.recurrence==='once'
-      ?String(r.due_date||'').slice(0,7)===wantedYM
-      :(!r.end_month||String(r.end_month).slice(0,7)>=wantedYM)))
-    .sort((a,b)=>payDay(a)-payDay(b));
+      ?String(r.due_date||'')===targetISO
+      :effectiveDay(r)===D&&(!r.end_month||String(r.end_month).slice(0,7)>=wantedYM)))
+    .sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0));
   let msg=(customMessage||'').trim()||'🏨 แจ้งชำระเงินให้ Owner — 5 โรงแรม';
-  msg+='\n'+TH_MF[M-1]+' '+(Y+543)+'\n'+LINE_DIV;
-  if(!active.length)return msg+'\n✅ ไม่มีรายการในเดือนนี้';
+  msg+='\nกำหนดจ่ายวันที่ '+D+' '+TH_MF[M-1]+' '+(Y+543)+'\n'+LINE_DIV;
+  if(!active.length)return msg+'\n✅ ไม่มีรายการที่ถึงรอบแจ้งเตือนวันนี้';
   let total=0;
   active.forEach(r=>{
     total+=Number(r.amount||0);
-    msg+='\n• วันที่ '+payDay(r)+' · '+r.category+(r.recurrence==='once'?' (ครั้งเดียว)':'');
+    msg+='\n• '+r.category+(r.recurrence==='once'?' (ครั้งเดียว)':'');
     msg+='\n  '+fmtMoneyExact(r.amount)+' บาท';
     if(r.destination_account)msg+=' · บัญชี '+r.destination_account;
     if(r.note)msg+='\n  '+r.note;
@@ -1250,7 +1253,13 @@ function openRecurringModal(biz,existing){
       const skipAmt=kind==='expense'&&amtUnknown;
       const a=Number(amt.value)||0;if(!skipAmt&&(!a||a<=0)){toast('กรุณาใส่จำนวนเงิน');return;}
       const payload={kind,business_id:bizSel.value,category:catInput.value.trim()||(kind==='expense'?'ค่าใช้จ่าย':'รายรับ'),amount:a,wht:(kind==='income'&&hasWht)?Number(whtAmt.value||0):0,pay_day:Number(daySel.value),note:note.value.trim(),active,amount_unknown:skipAmt};
-      if(existing)await Store.update('recurring_items',existing.id,payload);else await Store.insert('recurring_items',payload);
+      if(existing){
+        await Store.update('recurring_items',existing.id,payload);
+        if(USE_CLOUD){
+          const {error}=await sb.rpc('fc_api_sync_recurring_item',{p_recurring_id:existing.id});
+          if(error)throw error;
+        }
+      }else await Store.insert('recurring_items',payload);
       await materializeRecurring();toast('บันทึกแล้ว');closeModal();render();
     }},'บันทึก'));
   m.append(foot);showModal(bg);
@@ -2098,7 +2107,7 @@ async function renderHotelOwnerPayments(p){
   let lineOn=cfg.enabled!==false;
   const onBtn=el('button',{class:'pchip'+(lineOn?' sel':''),onclick:()=>{lineOn=!lineOn;onBtn.className='pchip'+(lineOn?' sel':'');onBtn.textContent=lineOn?'✓ เปิดแจ้งเตือน':'ปิดแจ้งเตือน';}},lineOn?'✓ เปิดแจ้งเตือน':'ปิดแจ้งเตือน');
   const preview=el('pre',{style:'max-height:320px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:.88rem;line-height:1.5;margin:0;background:#eaf6ea;border:1px solid #cfe6cf;border-left:3px solid #06c755;border-radius:10px;padding:12px 14px;color:#14321f'});
-  const refresh=()=>preview.textContent=buildMonthlyExpenseGroupMessage(cfg.items,curYM,msgInp.value);msgInp.addEventListener('input',refresh);refresh();
+  const refresh=()=>preview.textContent=buildMonthlyExpenseGroupMessage(cfg.items,curYM,msgInp.value,daysInp.value);msgInp.addEventListener('input',refresh);daysInp.addEventListener('input',refresh);refresh();
   editWrap.append(el('div',{class:'fld'},el('label',{},'หัวข้อความแจ้งเตือน'),msgInp,
     el('div',{class:'field-help'},'รายการ วันจ่าย ยอด และบัญชีจะต่อท้ายให้อัตโนมัติ')),
     el('div',{class:'row'},
@@ -2358,8 +2367,9 @@ async function renderSettings(p){
     const groupDays=el('input',{type:'number',min:'0',max:'30',value:String(monthlyGroup.remind_days??3)});
     const groupTime=el('input',{type:'time',value:monthlyGroup.send_time||'07:10',step:'60'});
     const groupPreview=el('pre',{style:'max-height:340px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:.88rem;line-height:1.5;margin:0;background:#eaf6ea;border:1px solid #cfe6cf;border-left:3px solid #06c755;border-radius:10px;padding:12px 14px;color:#14321f'});
-    const refreshGroupPreview=()=>{groupPreview.textContent=buildMonthlyExpenseGroupMessage(monthlyGroup.items,curYM,groupMsg.value);};
+    const refreshGroupPreview=()=>{groupPreview.textContent=buildMonthlyExpenseGroupMessage(monthlyGroup.items,curYM,groupMsg.value,groupDays.value);};
     groupMsg.addEventListener('input',refreshGroupPreview);
+    groupDays.addEventListener('input',refreshGroupPreview);
     let groupOn=monthlyGroup.enabled!==false;
     const groupOnBtn=el('button',{class:'pchip'+(groupOn?' sel':''),onclick:()=>{
       groupOn=!groupOn;
