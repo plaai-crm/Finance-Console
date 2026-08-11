@@ -356,7 +356,7 @@
 <div id="modalRoot"></div>
 <div id="toastRoot"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.55.0"></script>
 <script>
 /* ============================================================
    ตั้งค่าการเชื่อมต่อ Supabase  (แก้แค่ 2 บรรทัดนี้)
@@ -404,6 +404,7 @@ const TH_D=['อาทิตย์','จันทร์','อังคาร','�
 const REMIND_DAYS=3; // ค่าเริ่มต้น (จำนวนวันแจ้งล่วงหน้า) ใช้เมื่อยังไม่ได้ตั้งค่าเอง
 // การตั้งค่าแจ้งเตือน — โหลดจากคลาวด์ (LINE) หรือเครื่อง แล้วใช้ทั้งในแอปและ LINE ให้ตรงกัน
 const Settings={remind_days:REMIND_DAYS,reminder_message:'',send_when_empty:false,line_enabled:true,
+  send_time:'07:00',
   show_date:true,show_divider:true,show_business:false,show_total:true,compact:true,
   show_days_left:true,monthly_summary_enabled:false,no_repeat_reminders:true};
 const EXPENSE_SUGGEST=['ค่าน้ำ','ค่าไฟ','เงินเดือนพนักงาน','เงินเดือนแม่บ้าน','ค่าซื้อของ/วัตถุดิบ','ค่าผ่อนรถ','ค่าน้ำมัน','ค่าบำรุงรักษา','ค่าอินเทอร์เน็ต','ค่าเช่า','ภาษี/ค่าธรรมเนียม','อื่น ๆ'];
@@ -468,12 +469,13 @@ async function seedIfEmpty(){
 async function loadSettings(){
   try{
     if(USE_CLOUD){
-      const {data,error}=await sb.rpc('fc_get_line_settings');
+      const {data,error}=await sb.rpc('fc_api_get_line_settings');
       if(!error && data){
         Settings.remind_days=Number(data.remind_days ?? REMIND_DAYS);
         Settings.reminder_message=data.custom_message||'';
         Settings.send_when_empty=!!data.send_when_empty;
         Settings.line_enabled=data.enabled!==false;
+        Settings.send_time=data.send_time||'07:00';
         Settings.show_date=data.show_date!==false;
         Settings.show_divider=data.show_divider!==false;
         Settings.show_business=!!data.show_business;
@@ -490,6 +492,7 @@ async function loadSettings(){
         Settings.reminder_message=s.reminder_message||'';
         Settings.send_when_empty=!!s.send_when_empty;
         Settings.line_enabled=s.line_enabled!==false;
+        Settings.send_time=s.send_time||'07:00';
         Settings.show_date=s.show_date!==false;
         Settings.show_divider=s.show_divider!==false;
         Settings.show_business=!!s.show_business;
@@ -509,6 +512,7 @@ async function saveSettings(vals){
   Settings.reminder_message=vals.reminder_message||'';
   Settings.send_when_empty=!!vals.send_when_empty;
   Settings.line_enabled=vals.line_enabled!==false;
+  Settings.send_time=vals.send_time||'07:00';
   Settings.show_date=vals.show_date!==false;
   Settings.show_divider=vals.show_divider!==false;
   Settings.show_business=!!vals.show_business;
@@ -518,11 +522,12 @@ async function saveSettings(vals){
   Settings.monthly_summary_enabled=!!vals.monthly_summary_enabled;
   Settings.no_repeat_reminders=vals.no_repeat_reminders!==false;
   if(USE_CLOUD){
-    const {error}=await sb.rpc('fc_set_line_settings',{
+    const {error}=await sb.rpc('fc_api_set_line_settings',{
       p_remind_days:Settings.remind_days,
       p_custom_message:Settings.reminder_message,
       p_send_when_empty:Settings.send_when_empty,
       p_enabled:Settings.line_enabled,
+      p_send_time:Settings.send_time,
       p_show_date:Settings.show_date,
       p_show_divider:Settings.show_divider,
       p_show_business:Settings.show_business,
@@ -536,7 +541,7 @@ async function saveSettings(vals){
   }else{
     localStorage.setItem('fc_settings',JSON.stringify({
       remind_days:Settings.remind_days,reminder_message:Settings.reminder_message,
-      send_when_empty:Settings.send_when_empty,line_enabled:Settings.line_enabled,
+      send_when_empty:Settings.send_when_empty,line_enabled:Settings.line_enabled,send_time:Settings.send_time,
       show_date:Settings.show_date,show_divider:Settings.show_divider,
       show_business:Settings.show_business,show_total:Settings.show_total,compact:Settings.compact,
       show_days_left:Settings.show_days_left,monthly_summary_enabled:Settings.monthly_summary_enabled,
@@ -558,11 +563,14 @@ function buildLineMessage(s,items,today){
   items.forEach(r=>{total+=Number(r.amount||0);
     const bp=s.show_business?(' — '+(r.biz||'—')):'';
     const when=r.dleft<0?('เลย '+Math.abs(r.dleft)+' วัน'):r.dleft===0?'วันนี้':('อีก '+r.dleft+' วัน');
+    const amountTxt=r.amount_unknown
+      ?(Number(r.amount||0)>0?'~'+fmtBaht(r.amount)+' บาท (ประมาณการ)':'ยังไม่ทราบยอด')
+      :fmtBaht(r.amount)+' บาท';
     if(s.compact){
-      msg+='\n• '+r.category+bp+' · '+fmtBaht(r.amount)+' บาท'+(showLeft?' · '+when:'');
+      msg+='\n• '+r.category+bp+' · '+amountTxt+(showLeft?' · '+when:'');
     }else{
       const dd=r.txn_date?new Date(r.txn_date+'T00:00:00'):today;
-      msg+='\n• '+r.category+bp+'\n   '+Number(r.amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' บาท · กำหนด '+dd.getDate()+' '+TH_M[dd.getMonth()]+(showLeft?' ('+when+')':'');
+      msg+='\n• '+r.category+bp+'\n   '+amountTxt+' · กำหนด '+dd.getDate()+' '+TH_M[dd.getMonth()]+(showLeft?' ('+when+')':'');
     }
   });
   if(s.show_total){if(s.show_divider)msg+='\n'+LINE_DIV;msg+='\nรวม '+items.length+' รายการ · '+fmtBaht(total)+' บาท';}
@@ -582,25 +590,58 @@ function buildMonthlySummary(s,items,ym){
     const dd=r.txn_date?new Date(r.txn_date+'T00:00:00'):null;
     const dtxt=dd?(dd.getDate()+' '+TH_M[dd.getMonth()]):'—';
     const bp=s.show_business?(' — '+(r.biz||'—')):'';
-    msg+='\n• '+dtxt+' · '+r.category+bp+' · '+fmtBaht(r.amount)+' บาท';
+    const amountTxt=r.amount_unknown?(Number(r.amount||0)>0?'~'+fmtBaht(r.amount)+' บาท (ประมาณการ)':'ยังไม่ทราบยอด'):(fmtBaht(r.amount)+' บาท');
+    msg+='\n• '+dtxt+' · '+r.category+bp+' · '+amountTxt;
   });
   msg+='\n'+LINE_DIV+'\nรวม '+sorted.length+' รายการ · '+fmtBaht(total)+' บาท';
   return msg;
 }
 
+// สร้างข้อความกลุ่ม LINE แยกสำหรับ "ค่าใช้จ่ายประจำเดือน — 5 โรงแรมจ่ายให้"
+// กลุ่มนี้มีรายการและปลายทางของตัวเอง จึงไม่ปะปนกับการแจ้งเตือนรายจ่ายกลุ่มเดิม
+const fmtMoneyExact=n=>{
+  const v=Number(n||0);
+  return v.toLocaleString('en-US',{minimumFractionDigits:Number.isInteger(v)?0:2,maximumFractionDigits:2});
+};
+function buildMonthlyExpenseGroupMessage(items,ym,customMessage){
+  const p=(ym||todayISO().slice(0,7)).split('-').map(Number);
+  const Y=p[0],M=p[1];
+  const wantedYM=`${Y}-${String(M).padStart(2,'0')}`;
+  const payDay=r=>r.recurrence==='once'&&r.due_date?Number(String(r.due_date).slice(8,10)):+r.pay_day;
+  const active=(items||[])
+    .filter(r=>r.active!==false&&(r.recurrence==='once'
+      ?String(r.due_date||'').slice(0,7)===wantedYM
+      :(!r.end_month||String(r.end_month).slice(0,7)>=wantedYM)))
+    .sort((a,b)=>payDay(a)-payDay(b));
+  let msg=(customMessage||'').trim()||'🏨 แจ้งชำระเงินให้ Owner — 5 โรงแรม';
+  msg+='\n'+TH_MF[M-1]+' '+(Y+543)+'\n'+LINE_DIV;
+  if(!active.length)return msg+'\n✅ ไม่มีรายการในเดือนนี้';
+  let total=0;
+  active.forEach(r=>{
+    total+=Number(r.amount||0);
+    msg+='\n• วันที่ '+payDay(r)+' · '+r.category+(r.recurrence==='once'?' (ครั้งเดียว)':'');
+    msg+='\n  '+fmtMoneyExact(r.amount)+' บาท';
+    if(r.destination_account)msg+=' · บัญชี '+r.destination_account;
+    if(r.note)msg+='\n  '+r.note;
+  });
+  return msg+'\n'+LINE_DIV+'\nรวม '+active.length+' รายการ · '+fmtMoneyExact(total)+' บาท';
+}
+
 /* ---------- state & helpers ---------- */
 const App={user:null,tab:'dash'};
+let HOTEL_PAY_MONTH=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})();
 const $=(s,r=document)=>r.querySelector(s);
 const el=(tag,props={},...kids)=>{const n=document.createElement(tag);for(const k in props){if(k==='class')n.className=props[k];else if(k==='html')n.innerHTML=props[k];else if(k.startsWith('on'))n.addEventListener(k.slice(2),props[k]);else n.setAttribute(k,props[k]);}kids.flat().forEach(c=>{if(c==null||c===false)return;n.append(c.nodeType?c:document.createTextNode(c))});return n;};
 const money=n=>Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:2});
-const todayISO=()=>new Date().toISOString().slice(0,10);
+// วันที่ปฏิทินตามเวลาในเครื่อง (ประเทศไทย) — ห้ามใช้ UTC เพราะช่วง 00:00–06:59 จะกลายเป็นเมื่อวาน
+const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const fmtDate=iso=>{if(!iso)return'';const d=new Date(iso+'T00:00:00');return `${d.getDate()} ${TH_M[d.getMonth()]} ${d.getFullYear()+543}`;};
 const daysUntil=iso=>{const a=new Date(todayISO()+'T00:00:00'),b=new Date(iso+'T00:00:00');return Math.round((b-a)/86400000);};
 const initials=s=>(s||'?').trim().charAt(0).toUpperCase();
 const daysInMonth=(y,m)=>new Date(y,m,0).getDate(); // m=1..12
 function ymOffset(off){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+off);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function readFile(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
-function toast(msg){const r=$('#toastRoot');r.innerHTML='';const t=el('div',{class:'toast',html:svg(I.check)+'<span>'+msg+'</span>'});r.append(t);setTimeout(()=>t.remove(),2200);}
+function toast(msg){const r=$('#toastRoot');r.innerHTML='';const t=el('div',{class:'toast',html:svg(I.check)});t.append(el('span',{},String(msg??'')));r.append(t);setTimeout(()=>t.remove(),3200);}
 const txNet=t=>t.kind==='income'?(+t.amount-(+t.wht||0)):+t.amount;
 
 function scopedBusinesses(all){const a=all.filter(b=>b.active);const s=App.user.scope;if(s==='all')return a;if(s==='hotel')return a.filter(b=>b.category==='hotel');return a.filter(b=>b.category!=='hotel');}
@@ -615,13 +656,16 @@ function pct(n){return (n*100).toLocaleString('th-TH',{minimumFractionDigits:0,m
 function loanCalc(l,payments){
   const paid=payments.filter(p=>p.loan_id===l.id).reduce((s,p)=>s+(+p.amount||0),0);
   const principal=+l.principal||0;
-  const outstanding=Math.max(0,principal-paid);
+  const contractYears=(+l.term_months||0)/12;
+  const interest=principal*(+l.interest_rate||0)/100*contractYears;
+  const totalDue=principal+interest;
+  const outstanding=Math.max(0,totalDue-paid);
   const end=(l.term_months&&l.start_date)?addMonths(l.start_date,+l.term_months):null;
   const isClosed=l.status==='closed'||outstanding<=0.5;
   const overdue=!isClosed && (l.status==='overdue' || (!!end && daysUntil(end)<0));
   const daysLate=end?(-daysUntil(end)):0;
   const yearsElapsed=yearsBetween(l.start_date,todayISO());
-  return {paid,principal,outstanding,end,isClosed,overdue,daysLate,yearsElapsed,progress:principal>0?Math.min(1,paid/principal):0};
+  return {paid,principal,interest,totalDue,outstanding,end,isClosed,overdue,daysLate,yearsElapsed,progress:totalDue>0?Math.min(1,paid/totalDue):0};
 }
 // ประมาณค่างวดผ่อน (เงินต้น + ดอกเบี้ยแบบคงที่ตลอดสัญญา หารเท่ากันทุกงวด)
 function estInstallment(principal,ratePct,months){
@@ -721,18 +765,24 @@ async function doLogin(){
   if(!u||!p){err.textContent='กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';err.classList.remove('hidden');return;}
   let found=null;
   if(USE_CLOUD){
-    // โหมดคลาวด์: ตรวจรหัสผ่านฝั่งเซิร์ฟเวอร์ผ่านฟังก์ชัน fc_login
-    // (ดูไฟล์ supabase_security.sql) เบราว์เซอร์จะไม่ดึงรหัสผ่านลงมาเลย
-    const {data,error}=await sb.rpc('fc_login',{p_username:u,p_password:p});
-    if(error){err.textContent='เข้าสู่ระบบไม่สำเร็จ: '+error.message;err.classList.remove('hidden');return;}
-    found=data||null;
+    // ล็อกอินผ่าน Edge Function แล้วรับ Supabase Auth session จริง เพื่อให้ RLS แยกสิทธิ์รายคนได้
+    const {data,error}=await sb.functions.invoke('finance-console-auth',{body:{action:'login',username:u,password:p}});
+    if(error||!data?.session||!data?.profile){
+      err.textContent=data?.error||'เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบชื่อผู้ใช้และรหัสผ่าน';err.classList.remove('hidden');return;
+    }
+    const set=await sb.auth.setSession(data.session);
+    if(set.error){err.textContent='สร้างการเข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่';err.classList.remove('hidden');return;}
+    found=data.profile;
   }else{
     // โหมดทดลอง (ในเครื่อง): เทียบรหัสผ่านจากข้อมูลในเครื่องเหมือนเดิม
     const users=await Store.list('app_users');
     found=users.find(x=>x.username.toLowerCase()===u.toLowerCase()&&x.password===p&&x.active!==false)||null;
   }
   if(!found){err.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';err.classList.remove('hidden');return;}
-  err.classList.add('hidden'); App.user=found; $('#lgPass').value='';
+  err.classList.add('hidden');await enterApp(found);
+}
+async function enterApp(found){
+  App.user=found; $('#lgPass').value='';
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   $('#avatar').textContent=initials(found.name||found.username);
   $('#sideName').textContent=found.name||found.username;
@@ -742,8 +792,9 @@ async function doLogin(){
   buildNav(); go('dash');
   resetIdle(); // เริ่มจับเวลาไม่ใช้งาน 30 นาที
 }
-function logout(timedOut){
+async function logout(timedOut){
   clearTimeout(idleTimer);
+  if(USE_CLOUD){try{await sb.auth.signOut();}catch(e){}}
   App.user=null;$('#app').classList.add('hidden');$('#login').classList.remove('hidden');
   $('#lgUser').value='';$('#lgPass').value='';$('#modalRoot').innerHTML='';
   const err=$('#loginError');
@@ -772,6 +823,7 @@ setInterval(tickClock,1000);
 function tabDefs(){
   const t=[{id:'dash',ic:I.dash,label:'สรุป'},{id:'trans',ic:I.wallet,label:'บันทึกข้อมูล'},
     {id:'owner',ic:isOwner()?I.crown:I.bank,label:isOwner()?'บัญชี Owner':'โอนให้ Owner'}];
+  if(isOwner()) t.push({id:'hotelpay',ic:I.bank,label:'โรงแรมจ่าย Owner'});
   if(canLending()) t.push({id:'lending',ic:I.lend,label:'ปล่อยกู้ & ลงทุน'});
   t.push({id:'settings',ic:I.gear,label:isOwner()?'ตั้งค่า':'บัญชีฉัน'});
   return t;
@@ -780,6 +832,7 @@ const PG_META={
   dash:['Dashboard สรุปผู้บริหาร','ภาพรวมการเงินของกลุ่มธุรกิจ'],
   trans:['บันทึกรายรับ-รายจ่าย','กรอกและติดตามรายการของแต่ละธุรกิจ'],
   owner:['บัญชี Owner','เงินโอนเข้า เงินยืม และการจ่ายคืน'],
+  hotelpay:['โรงแรมจ่ายให้ Owner','ตารางเงินที่โรงแรมต้องจ่าย พร้อมแจ้งเตือน LINE แยก'],
   lending:['ปล่อยกู้ · ลงทุน · ค้ำประกัน','เงินให้กู้ การลงทุน รายได้ค่าค้ำประกัน และเอกสารสัญญา'],
   settings:['ตั้งค่าระบบ','ผู้ใช้งาน ธุรกิจ และการแจ้งเตือน']
 };
@@ -794,6 +847,11 @@ function go(tab){App.tab=tab;buildNav();const meta=PG_META[tab]||['',''];$('#pgT
 
 /* ---------- recurring materialization ---------- */
 async function materializeRecurring(){
+  if(USE_CLOUD){
+    const {error}=await sb.rpc('fc_api_materialize_recurring');
+    if(error)throw error;
+    return;
+  }
   const items=(await Store.list('recurring_items')).filter(i=>i.active!==false);
   if(!items.length) return;
   const tx=await Store.list('transactions');
@@ -809,7 +867,7 @@ async function materializeRecurring(){
       const row={recurring_id:it.id,kind:it.kind,business_id:it.business_id,category:it.category,
         amount:+it.amount||0,wht:+it.wht||0,txn_date:date,recurrence:'monthly',
         is_paid:false, paid_date:null,
-        note:it.note||'', created_by:'auto'};
+        note:it.note||'',amount_unknown:it.kind==='expense'&&!!it.amount_unknown,created_by:'auto'};
       const created=await Store.insert('transactions',row); tx.push(created);
     }
   }
@@ -822,6 +880,7 @@ async function render(){
     if(App.tab==='dash')await renderDash(p);
     else if(App.tab==='trans')await renderTrans(p);
     else if(App.tab==='owner')await renderOwner(p);
+    else if(App.tab==='hotelpay')await renderHotelOwnerPayments(p);
     else if(App.tab==='lending')await renderLending(p);
     else if(App.tab==='settings')await renderSettings(p);
   }catch(e){p.innerHTML='';p.append(el('div',{class:'card'},el('h2',{},'เกิดข้อผิดพลาด'),el('div',{class:'t-sub'},String(e.message||e))));}
@@ -833,29 +892,16 @@ async function loadScoped(){
   return {bizAll,biz,tx:txAll.filter(t=>ids.has(t.business_id))};
 }
 const bizName=(all,id)=>{const b=all.find(x=>x.id===id);return b?b.name:'—';};
-function emptyBox(text){return el('div',{class:'empty',html:svg(I.doc)+'<div>'+text+'</div>'});}
+function emptyBox(text){return el('div',{class:'empty'},el('span',{html:svg(I.doc)}),el('div',{},String(text??'')));}
 function kpi(kind,k,v,u){return el('div',{class:'kpi '+kind},el('span',{class:'bar'}),el('div',{class:'k'},k),el('div',{class:'v mono-num'},v,' ',el('span',{class:'u'},u)));}
 
 /* ---------- ไม่แจ้งเตือนซ้ำ + เลื่อนจ่าย ----------
-   รายการที่เคยขึ้นแจ้งเตือนแล้ว (ไม่ว่าจะจ่ายแล้วหรือยังไม่จ่าย) จะไม่โผล่ในการ์ด "ต้องดำเนินการ" อีก
-   จนกว่าจะถูก "เลื่อนจ่าย" ไปเป็นวันใหม่ แล้ววันนั้นมาถึง จึงจะกลับมาแจ้งเตือนอีกครั้ง */
+   ซ่อนรายการหลัง LINE ยืนยันว่าส่งสำเร็จแล้วเท่านั้น การเปิด Dashboard จะไม่เปลี่ยนสถานะแจ้งเตือน */
 function reminderActive(t){
   if(!Settings.no_repeat_reminders)return true;
   const today=todayISO();
   if(t.reminder_snooze_until)return t.reminder_snooze_until<=today;
   return !t.reminder_notified_at;
-}
-// ทำเครื่องหมายว่ารายการเหล่านี้ถูกแจ้งเตือนแล้ว ณ วันนี้ (อัปเดตวันที่ให้เป็นปัจจุบันเสมอ) — ทำงานเบื้องหลัง ไม่บล็อกหน้าจอ
-async function markReminded(list){
-  if(!Settings.no_repeat_reminders)return;
-  const today=todayISO();
-  for(const t of list){
-    if(t.reminder_notified_at===today&&!t.reminder_snooze_until)continue;
-    try{
-      await Store.update('transactions',t.id,{reminder_notified_at:today,reminder_snooze_until:null});
-      t.reminder_notified_at=today;t.reminder_snooze_until=null;
-    }catch(e){/* ยังไม่ได้เพิ่มคอลัมน์ reminder_notified_at/reminder_snooze_until บนฐานข้อมูล — ข้ามไปก่อน */}
-  }
 }
 function openSnoozeModal(t){
   const {bg,m}=modal('เลื่อนจ่าย',(t.category||'ค่าใช้จ่าย')+' — เลือกวันที่จะให้แจ้งเตือนอีกครั้ง');
@@ -920,7 +966,6 @@ async function renderDash(p){
   });
   if(Settings.no_repeat_reminders&&snoozedCount>0)rc.append(el('div',{class:'field-help',style:'margin-top:6px'},`มี ${snoozedCount} รายการที่เคยแจ้งเตือนแล้ว/เลื่อนไว้ยังไม่ถึงกำหนด จึงไม่แสดงซ้ำในตอนนี้`));
   p.append(rc);
-  markReminded(due);
 
   // ---- เงินค้างรับ (accounts receivable) แยกตามเดือน ----
   {
@@ -1026,7 +1071,7 @@ async function renderTrans(p){
   if(!recs.length)rc.append(emptyBox('ยังไม่มีรายการประจำ'));
   else recs.forEach(r=>rc.append(el('div',{class:'biz-row'},
     el('div',{},el('div',{class:'t-title'},(r.category||'-')+' · '+bizName(bizAll,r.business_id)),
-      el('div',{class:'t-sub'},`${r.kind==='income'?'รายรับ':'รายจ่าย'} ${money(r.amount)} บาท · ทุกวันที่ ${r.pay_day} ของเดือน${r.active===false?' · (ปิด)':''}`)),
+      el('div',{class:'t-sub'},`${r.kind==='income'?'รายรับ':'รายจ่าย'} ${(r.kind==='expense'&&r.amount_unknown)?'ไม่ทราบยอด':money(r.amount)+' บาท'} · ทุกวันที่ ${r.pay_day} ของเดือน${r.active===false?' · (ปิด)':''}`)),
     el('div',{style:'display:flex;gap:8px'},
       el('span',{class:'chip '+(r.kind==='income'?'c-in':'c-out')},r.kind==='income'?'รับ':'จ่าย'),
       el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openRecurringModal(biz,r)},'แก้ไข')))));
@@ -1166,9 +1211,18 @@ function openRecurringModal(biz,existing){
   const catInput=el('input',{type:'text',placeholder:'เช่น ค่าเช่าตึก / เงินเดือน',value:r.category||''});
   const catChips=el('div',{class:'chips'});
   function drawCats(){catChips.innerHTML='';(kind==='expense'?EXPENSE_SUGGEST:INCOME_SUGGEST).forEach(c=>catChips.append(el('button',{class:'pchip'+(catInput.value===c?' sel':''),onclick:()=>{catInput.value=c;drawCats();}},c)));}
-  const seg=segControl([['income','รายรับประจำ'],['expense','รายจ่ายประจำ']],kind,v=>{kind=v;drawCats();whtWrap.style.display=kind==='income'?'block':'none';});
+  const seg=segControl([['income','รายรับประจำ'],['expense','รายจ่ายประจำ']],kind,v=>{kind=v;drawCats();toggleRecurringKindUI();});
   const bizSel=el('select',{});biz.forEach(b=>{const o=el('option',{value:b.id},b.name);if(r.business_id===b.id)o.selected=true;bizSel.append(o);});
   const amt=el('input',{type:'number',inputmode:'decimal',placeholder:'0.00',value:r.amount||''});
+  let amtUnknown=!!r.amount_unknown;
+  const amtUnknownWrap=el('div',{class:'fld'});
+  const amtUnknownBtn=el('button',{class:'pchip'+(amtUnknown?' sel':''),onclick:()=>{
+    amtUnknown=!amtUnknown;amtUnknownBtn.className='pchip'+(amtUnknown?' sel':'');
+    amtUnknownBtn.textContent=amtUnknown?'✓ ยังไม่ทราบยอด':'ทราบยอดแล้ว';
+    amt.placeholder=amtUnknown?'ใส่ยอดประมาณการได้ หรือเว้นว่าง':'0.00';
+  }},amtUnknown?'✓ ยังไม่ทราบยอด':'ทราบยอดแล้ว');
+  amtUnknownWrap.append(el('label',{},'จำนวนเงินยังไม่แน่นอน'),amtUnknownBtn,
+    el('div',{class:'field-help',style:'margin-top:6px'},'ถ้าเลือก “ยังไม่ทราบยอด” ไม่ต้องใส่ตัวเลข และ LINE จะแสดงคำว่า “ยังไม่ทราบยอด”'));
   const daySel=el('select',{});for(let d=1;d<=31;d++){const o=el('option',{value:d},'ทุกวันที่ '+d);if(+r.pay_day===d)o.selected=true;daySel.append(o);}
   let hasWht=(+r.wht>0);
   const whtAmt=el('input',{type:'number',inputmode:'decimal',placeholder:'0.00',value:(+r.wht>0?r.wht:'')});
@@ -1177,13 +1231,15 @@ function openRecurringModal(biz,existing){
   const whtWrap=el('div',{class:'fld',style:(kind==='income'?'':'display:none')},el('label',{},'หัก ณ ที่จ่าย'),whtToggle,whtAmtWrap);
   const note=el('input',{type:'text',placeholder:'หมายเหตุ (ไม่บังคับ)',value:r.note||''});
   let active=r.active!==false;const actBtn=el('button',{class:'pchip'+(active?' sel':''),onclick:()=>{active=!active;actBtn.className='pchip'+(active?' sel':'');actBtn.textContent=active?'✓ เปิดใช้งาน':'ปิดใช้งาน';}},active?'✓ เปิดใช้งาน':'ปิดใช้งาน');
-  drawCats();
+  function toggleRecurringKindUI(){whtWrap.style.display=kind==='income'?'block':'none';amtUnknownWrap.style.display=kind==='expense'?'block':'none';}
+  drawCats();toggleRecurringKindUI();
+  amt.placeholder=(kind==='expense'&&amtUnknown)?'ใส่ยอดประมาณการได้ หรือเว้นว่าง':'0.00';
   body.append(
     el('div',{class:'fld'},el('label',{},'ประเภท'),seg),
     el('div',{class:'fld'},el('label',{},'ธุรกิจ'),bizSel),
     el('div',{class:'fld'},el('label',{},'หมวด / รายการ'),catChips,catInput),
     el('div',{class:'row'},el('div',{class:'fld'},el('label',{},'จำนวนเงิน (บาท)'),amt),el('div',{class:'fld'},el('label',{},'วันที่ได้/จ่ายทุกเดือน'),daySel)),
-    whtWrap,
+    whtWrap,amtUnknownWrap,
     el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note),
     el('div',{class:'fld'},el('label',{},'สถานะ'),actBtn));
   m.append(body);
@@ -1191,8 +1247,9 @@ function openRecurringModal(biz,existing){
   if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบรายการประจำนี้? (รายการที่สร้างไปแล้วยังอยู่)')){await Store.remove('recurring_items',existing.id);toast('ลบแล้ว');closeModal();render();}}},'ลบ'));
   foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),
     el('button',{class:'btn btn-dark',onclick:async()=>{
-      const a=Number(amt.value);if(!a||a<=0){toast('กรุณาใส่จำนวนเงิน');return;}
-      const payload={kind,business_id:bizSel.value,category:catInput.value.trim()||(kind==='expense'?'ค่าใช้จ่าย':'รายรับ'),amount:a,wht:(kind==='income'&&hasWht)?Number(whtAmt.value||0):0,pay_day:Number(daySel.value),note:note.value.trim(),active};
+      const skipAmt=kind==='expense'&&amtUnknown;
+      const a=Number(amt.value)||0;if(!skipAmt&&(!a||a<=0)){toast('กรุณาใส่จำนวนเงิน');return;}
+      const payload={kind,business_id:bizSel.value,category:catInput.value.trim()||(kind==='expense'?'ค่าใช้จ่าย':'รายรับ'),amount:a,wht:(kind==='income'&&hasWht)?Number(whtAmt.value||0):0,pay_day:Number(daySel.value),note:note.value.trim(),active,amount_unknown:skipAmt};
       if(existing)await Store.update('recurring_items',existing.id,payload);else await Store.insert('recurring_items',payload);
       await materializeRecurring();toast('บันทึกแล้ว');closeModal();render();
     }},'บันทึก'));
@@ -1294,16 +1351,32 @@ function openLoanModal(direction,existing){
 
 /* ---------- uploader ---------- */
 function makeUploader(existing){
-  let state=existing&&existing.file_data?{file_name:existing.file_name,file_data:existing.file_data}:null;
+  let state=existing&&(existing.file_data||existing.storage_path)?{file_name:existing.file_name,file_data:existing.file_data||null,storage_path:existing.storage_path||null,file_obj:null}:null;
   const input=el('input',{type:'file',style:'display:none',accept:'.pdf,.jpg,.jpeg,.png,.webp'});
   const box=el('div',{});
   function draw(){box.innerHTML='';box.append(el('div',{class:'uploader',html:svg(I.upload)+'<span>คลิกเพื่อเลือกไฟล์ (PDF/รูปภาพ ไม่เกิน 4MB)</span>',onclick:()=>input.click()}));
-    if(state)box.append(el('div',{},el('span',{class:'filechip',html:svg(I.doc)+'<span>'+state.file_name+'</span>'}),el('button',{class:'btn btn-ghost btn-sm',type:'button',style:'margin-left:8px',onclick:()=>{state=null;draw();}},'ลบไฟล์')));}
-  input.addEventListener('change',async()=>{const f=input.files[0];if(!f)return;if(f.size>MAX_FILE){toast('ไฟล์ใหญ่เกิน 4MB');input.value='';return;}state={file_name:f.name,file_data:await readFile(f)};draw();});
+    if(state){const chip=el('span',{class:'filechip',html:svg(I.doc)});chip.append(el('span',{},String(state.file_name||'ไฟล์เอกสาร')));box.append(el('div',{},chip,el('button',{class:'btn btn-ghost btn-sm',type:'button',style:'margin-left:8px',onclick:()=>{state=null;draw();}},'ลบไฟล์')));}}
+  input.addEventListener('change',async()=>{const f=input.files[0];if(!f)return;if(f.size>MAX_FILE){toast('ไฟล์ใหญ่เกิน 4MB');input.value='';return;}state={file_name:f.name,file_obj:f,file_data:USE_CLOUD?null:await readFile(f),storage_path:null};draw();});
   draw();
   return {node:el('div',{},input,box),get:()=>state};
 }
-function fileLink(row){if(!row.file_data)return el('span',{class:'t-sub'},'ไม่มีไฟล์');return el('a',{class:'link-open',href:row.file_data,target:'_blank',download:row.file_name||'document'},'เปิดเอกสาร');}
+async function persistUpload(state,folder,oldPath){
+  if(!state){if(USE_CLOUD&&oldPath)await sb.storage.from('finance-documents').remove([oldPath]);return {file_name:null,file_data:null,storage_path:null};}
+  if(!USE_CLOUD)return {file_name:state.file_name,file_data:state.file_data,storage_path:null};
+  if(!state.file_obj)return {file_name:state.file_name,file_data:null,storage_path:state.storage_path||oldPath||null};
+  const safe=(state.file_name||'document').replace(/[^a-zA-Z0-9._-]/g,'_').slice(-100);
+  const path=`${folder}/${crypto.randomUUID()}-${safe}`;
+  const {error}=await sb.storage.from('finance-documents').upload(path,state.file_obj,{upsert:false,contentType:state.file_obj.type||undefined});
+  if(error)throw error;
+  if(oldPath&&oldPath!==path)await sb.storage.from('finance-documents').remove([oldPath]);
+  return {file_name:state.file_name,file_data:null,storage_path:path};
+}
+async function removeStoredFile(row){if(USE_CLOUD&&row?.storage_path)await sb.storage.from('finance-documents').remove([row.storage_path]);}
+function fileLink(row){
+  if(row.storage_path)return el('button',{class:'link-open',onclick:async()=>{const {data,error}=await sb.storage.from('finance-documents').createSignedUrl(row.storage_path,60);if(error){toast('เปิดเอกสารไม่สำเร็จ');return;}window.open(data.signedUrl,'_blank','noopener,noreferrer');}},'เปิดเอกสาร');
+  if(row.file_data)return el('a',{class:'link-open',href:row.file_data,target:'_blank',rel:'noopener noreferrer',download:row.file_name||'document'},'เปิดเอกสาร');
+  return el('span',{class:'t-sub'},'ไม่มีไฟล์');
+}
 
 /* ---------- LENDING · INVESTMENT · GUARANTEE · DOCUMENTS ---------- */
 let LV={sub:'loans'};
@@ -1641,7 +1714,7 @@ async function renderDocsSub(p){
       el('div',{style:'margin-top:6px'},fileLink(d))),
     el('div',{style:'display:flex;gap:8px'},
       el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openDocModal(d)},'แก้ไข'),
-      el('button',{class:'btn btn-danger btn-sm',onclick:async()=>{if(confirm('ลบเอกสารนี้?')){await Store.remove('documents',d.id);toast('ลบแล้ว');render();}}},'ลบ')))));
+      el('button',{class:'btn btn-danger btn-sm',onclick:async()=>{if(confirm('ลบเอกสารนี้?')){await removeStoredFile(d);await Store.remove('documents',d.id);toast('ลบแล้ว');render();}}},'ลบ')))));
   p.append(dc);
 }
 
@@ -1710,16 +1783,16 @@ async function openAffiliateLoanModal(existing){
     el('div',{class:'fld'},el('label',{},'เอกสารสัญญากู้'),up.node));
   m.append(body);
   const foot=el('div',{class:'modal-foot'});
-  if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบสัญญานี้? (ประวัติการชำระ/ติดตามจะถูกลบด้วย)')){await Store.remove('affiliate_loans',existing.id);toast('ลบแล้ว');closeModal();render();}}},'ลบ'));
+  if(existing)foot.append(el('button',{class:'btn btn-danger btn-sm',style:'flex:0 0 auto',onclick:async()=>{if(confirm('ลบสัญญานี้? (ประวัติการชำระ/ติดตามจะถูกลบด้วย)')){await removeStoredFile(existing);await Store.remove('affiliate_loans',existing.id);toast('ลบแล้ว');closeModal();render();}}},'ลบ'));
   foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),el('button',{class:'btn btn-dark',onclick:async()=>{
     const bname=bt==='external'?extName.value.trim():bizSel.value;
     if(!bname){toast('กรุณาระบุชื่อผู้กู้');return;}
-    const f=up.get();
+    const f=await persistUpload(up.get(),'loans',existing?.storage_path);
     const payload={borrower_type:bt,business_name:bname,business_detail:detail.value.trim(),purpose:purpose.value.trim(),expected_outcome:outcome.value.trim(),
       secured:sec,collateral_desc:sec==='secured'?colDesc.value.trim():'',collateral_value:sec==='secured'?Number(colVal.value||0):0,
       principal:Number(principal.value||0),interest_rate:Number(rate.value||0),term_months:monthsOf(),installment:Number(installment.value||0),
       start_date:start.value,borrower_history:history.value.trim(),status:statusSel.value,note:note.value.trim(),
-      file_name:f?f.file_name:null,file_data:f?f.file_data:null,created_by:App.user.username};
+      file_name:f.file_name,file_data:f.file_data,storage_path:f.storage_path,created_by:App.user.username};
     if(existing)await Store.update('affiliate_loans',existing.id,payload);else await Store.insert('affiliate_loans',payload);
     toast('บันทึกแล้ว');closeModal();render();
   }},'บันทึก'));m.append(foot);showModal(bg);
@@ -1947,14 +2020,159 @@ function openDocModal(existing){
   const foot=el('div',{class:'modal-foot'});
   foot.append(el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),el('button',{class:'btn btn-dark',onclick:async()=>{
     if(!title.value.trim()){toast('กรุณาใส่ชื่อเอกสาร');return;}
-    const f=up.get();
-    const payload={title:title.value.trim(),doc_type:typeSel.value,business_name:biz.value.trim(),note:note.value.trim(),file_name:f?f.file_name:null,file_data:f?f.file_data:null,created_by:App.user.username};
+    const f=await persistUpload(up.get(),'documents',existing?.storage_path);
+    const payload={title:title.value.trim(),doc_type:typeSel.value,business_name:biz.value.trim(),note:note.value.trim(),file_name:f.file_name,file_data:f.file_data,storage_path:f.storage_path,created_by:App.user.username};
     if(existing)await Store.update('documents',existing.id,payload);else await Store.insert('documents',payload);
     toast('บันทึกแล้ว');closeModal();render();
   }},'บันทึก'));m.append(foot);showModal(bg);
 }
 
 /* ---------- SETTINGS ---------- */
+async function renderHotelOwnerPayments(p){
+  if(!isOwner())return;
+  const curYM=HOTEL_PAY_MONTH;
+  let cfg={enabled:true,remind_days:3,send_time:'07:10',custom_message:'',connected:false,items:[]};
+  if(USE_CLOUD){
+    try{
+      const {data,error}=await sb.rpc('fc_api_get_monthly_expense_settings');
+      if(error)throw error;
+      if(data)cfg={...cfg,...data,items:Array.isArray(data.items)?data.items:[]};
+    }catch(e){}
+  }
+
+  if(!cfg.items.length){
+    p.append(el('div',{class:'card'},
+      el('div',{class:'card-h'},el('h2',{},'โรงแรมจ่ายให้ Owner'),el('span',{class:'badge-mode badge-local'},'รอติดตั้ง')),
+      el('div',{class:'alert-over'},el('div',{class:'rm-main'},
+        el('div',{class:'rm-title'},'ยังไม่พบชุดรายการโรงแรมจ่ายให้ Owner'),
+        el('div',{class:'rm-meta'},'กรุณารันไฟล์ line_notify_v5_monthly_expense_group.sql บน Supabase')))));
+    return;
+  }
+
+  const payDay=r=>r.recurrence==='once'&&r.due_date?Number(String(r.due_date).slice(8,10)):+r.pay_day;
+  const active=cfg.items.filter(r=>r.active!==false&&(r.recurrence==='once'
+    ?String(r.due_date||'').slice(0,7)===curYM
+    :(!r.end_month||String(r.end_month).slice(0,7)>=curYM)));
+  const total=active.reduce((s,r)=>s+Number(r.amount||0),0);
+  const isCurrentMonth=curYM===todayISO().slice(0,7),todayDay=isCurrentMonth?new Date().getDate():1;
+  const upcoming=[...active].filter(r=>payDay(r)>=todayDay).sort((a,b)=>payDay(a)-payDay(b))[0]||[...active].sort((a,b)=>payDay(a)-payDay(b))[0];
+  p.append(el('div',{class:'kpi-grid'},
+    kpi('ink','รายการประจำเดือน',String(active.length),'รายการ'),
+    kpi('gold','รวมที่โรงแรมจ่ายให้ Owner',fmtMoneyExact(total),'฿'),
+    kpi('pos','กำหนดถัดไป',upcoming?'วันที่ '+payDay(upcoming):'—','')));
+
+  const listCard=el('div',{class:'card'});
+  const monthSel=el('input',{type:'month',value:curYM,onchange:e=>{HOTEL_PAY_MONTH=e.target.value||todayISO().slice(0,7);go('hotelpay');}});
+  listCard.append(el('div',{class:'card-h'},
+    el('div',{},el('div',{class:'section-eyebrow'},'ตารางจ่ายให้ Owner'),el('h2',{},'รายการที่โรงแรมต้องจ่ายให้ Owner')),
+    el('div',{style:'display:flex;gap:8px;align-items:center;flex-wrap:wrap'},monthSel,
+      el('button',{class:'btn btn-dark',html:svg(I.plus)+'เพิ่มรายการ',onclick:()=>openHotelOwnerPaymentModal(null)}))));
+  const tb=el('table',{class:'table'});
+  tb.append(el('thead',{},el('tr',{},el('th',{},'วันจ่าย'),el('th',{},'รายการ'),el('th',{},'บัญชีปลายทาง'),el('th',{style:'text-align:right'},'จำนวนเงิน'),el('th',{},''))));
+  const body=el('tbody',{});
+  [...active].sort((a,b)=>payDay(a)-payDay(b)).forEach(r=>body.append(el('tr',{},
+    el('td',{},el('span',{class:'chip c-auto'},'วันที่ '+payDay(r))),
+    el('td',{},el('div',{class:'t-title'},r.category),
+      el('div',{class:'t-sub'},(r.recurrence==='once'?'จ่ายครั้งเดียว':'จ่ายทุกเดือน')+(r.note?' · '+r.note:''))),
+    el('td',{},r.destination_account||'—'),
+    el('td',{style:'text-align:right;font-weight:700'},fmtMoneyExact(r.amount)+' บาท'),
+    el('td',{},el('div',{style:'display:flex;gap:6px;justify-content:flex-end'},
+      el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openHotelOwnerPaymentModal(r)},'แก้ไข'),
+      el('button',{class:'btn btn-danger btn-sm',onclick:async()=>{if(confirm('ลบรายการ “'+r.category+'”?')){try{const {error}=await sb.rpc('fc_api_delete_monthly_expense_item',{p_id:r.id});if(error)throw error;toast('ลบรายการแล้ว');go('hotelpay');}catch(e){toast('ลบไม่สำเร็จ — กรุณารันไฟล์อัปเดตล่าสุด');}}}},'ลบ'))))));
+  if(!active.length)body.append(el('tr',{},el('td',{colspan:'5'},emptyBox('ไม่มีรายการในเดือนนี้ — กด “เพิ่มรายการ” เพื่อบันทึกรายการครั้งเดียวหรือรายเดือน'))));
+  tb.append(body);listCard.append(el('div',{class:'table-wrap'},tb));p.append(listCard);
+
+  const lineCard=el('div',{class:'card'});
+  lineCard.append(el('div',{class:'card-h'},
+    el('div',{},el('div',{class:'section-eyebrow'},'LINE กลุ่มโรงแรม'),el('h2',{},'ข้อความและเวลาแจ้งให้โรงแรมจ่าย Owner')),
+    el('span',{class:'badge-mode '+(cfg.connected?'badge-cloud':'badge-local')},cfg.connected?'เชื่อมต่อแล้ว':'รอติดตั้ง')));
+  const editWrap=el('div',{style:'display:none;padding-top:16px;border-top:1px solid var(--line);margin-top:14px'});
+  const editBtn=el('button',{class:'btn btn-ghost btn-sm'},'แก้ไข');
+  const compactStatus=el('div',{class:'t-sub'},`${cfg.enabled===false?'ปิดอยู่':'เปิดอยู่'} · ล่วงหน้า ${cfg.remind_days} วัน · ${cfg.send_time} น.`);
+  let editOpen=false;editBtn.addEventListener('click',()=>{editOpen=!editOpen;editWrap.style.display=editOpen?'block':'none';editBtn.textContent=editOpen?'ปิด':'แก้ไข';});
+  lineCard.append(el('div',{style:'display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap'},compactStatus,editBtn));
+
+  const msgInp=el('textarea',{placeholder:'เช่น 🏨 แจ้งชำระเงินให้ Owner — 5 โรงแรม'});msgInp.value=cfg.custom_message||'';
+  const daysInp=el('input',{type:'number',min:'0',max:'30',value:String(cfg.remind_days)});
+  const timeInp=el('input',{type:'time',value:cfg.send_time||'07:10',step:'60'});
+  let lineOn=cfg.enabled!==false;
+  const onBtn=el('button',{class:'pchip'+(lineOn?' sel':''),onclick:()=>{lineOn=!lineOn;onBtn.className='pchip'+(lineOn?' sel':'');onBtn.textContent=lineOn?'✓ เปิดแจ้งเตือน':'ปิดแจ้งเตือน';}},lineOn?'✓ เปิดแจ้งเตือน':'ปิดแจ้งเตือน');
+  const preview=el('pre',{style:'max-height:320px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:.88rem;line-height:1.5;margin:0;background:#eaf6ea;border:1px solid #cfe6cf;border-left:3px solid #06c755;border-radius:10px;padding:12px 14px;color:#14321f'});
+  const refresh=()=>preview.textContent=buildMonthlyExpenseGroupMessage(cfg.items,curYM,msgInp.value);msgInp.addEventListener('input',refresh);refresh();
+  editWrap.append(el('div',{class:'fld'},el('label',{},'หัวข้อความแจ้งเตือน'),msgInp,
+    el('div',{class:'field-help'},'รายการ วันจ่าย ยอด และบัญชีจะต่อท้ายให้อัตโนมัติ')),
+    el('div',{class:'row'},
+      el('div',{class:'fld'},el('label',{},'เตือนล่วงหน้ากี่วัน'),daysInp,el('div',{class:'field-help'},'เลือก 0 = เช้าวันครบกำหนด')),
+      el('div',{class:'fld'},el('label',{},'เวลาแจ้งเตือน'),timeInp),
+      el('div',{class:'fld'},el('label',{},'สถานะ'),onBtn)),
+    el('div',{class:'fld'},el('label',{},'ตัวอย่าง LINE'),preview));
+  const acts=el('div',{style:'display:flex;gap:10px;flex-wrap:wrap'});
+  acts.append(el('button',{class:'btn btn-dark',html:svg(I.check)+'บันทึก',onclick:async()=>{
+    const d=Number(daysInp.value);if(!(d>=0&&d<=30)){toast('กรุณาใส่จำนวนวัน 0–30');return;}
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(timeInp.value)){toast('กรุณาเลือกเวลา');return;}
+    try{const {error}=await sb.rpc('fc_api_set_monthly_expense_settings',{p_remind_days:d,p_send_time:timeInp.value,p_custom_message:msgInp.value.trim(),p_enabled:lineOn});if(error)throw error;
+      compactStatus.textContent=`${lineOn?'เปิดอยู่':'ปิดอยู่'} · ล่วงหน้า ${d} วัน · ${timeInp.value} น.`;toast('บันทึกข้อความ วัน และเวลาแล้ว');
+    }catch(e){toast('บันทึกไม่สำเร็จ — กรุณารันไฟล์อัปเดตล่าสุดบน Supabase');}
+  }}));
+  acts.append(el('button',{class:'btn btn-ghost',onclick:async()=>{try{const {error}=await sb.rpc('fc_api_line_monthly_expense_send_now');if(error)throw error;toast('ส่งทดสอบเข้ากลุ่มโรงแรมแล้ว');}catch(e){toast('ส่งไม่สำเร็จ');}}},'ส่งทดสอบ'));
+  editWrap.append(acts);lineCard.append(editWrap);p.append(lineCard);
+}
+
+function openHotelOwnerPaymentModal(existing){
+  const x=existing||{recurrence:'monthly',category:'',amount:'',pay_day:1,due_date:HOTEL_PAY_MONTH+'-01',destination_account:'',note:'',end_month:null,active:true};
+  const {bg,m}=modal(existing?'แก้ไขรายการโรงแรมจ่าย Owner':'เพิ่มรายการโรงแรมจ่าย Owner');
+  const body=el('div',{class:'modal-body'});
+  let recurrence=x.recurrence||'monthly';
+  const category=el('input',{type:'text',placeholder:'ชื่อรายการ เช่น ค่าประกัน หรือเงินกู้',value:x.category||''});
+  const amount=el('input',{type:'number',inputmode:'decimal',min:'0',step:'0.01',placeholder:'0.00',value:x.amount??''});
+  const payDay=el('input',{type:'number',min:'1',max:'31',value:String(x.pay_day||1)});
+  const dueDate=el('input',{type:'date',value:x.due_date||HOTEL_PAY_MONTH+'-01'});
+  const account=el('input',{type:'text',placeholder:'เลขบัญชีหรือชื่อบัญชีปลายทาง',value:x.destination_account||''});
+  const note=el('textarea',{placeholder:'หมายเหตุ (ไม่บังคับ)'});note.value=x.note||'';
+  const endMonth=el('input',{type:'month',value:x.end_month?String(x.end_month).slice(0,7):''});
+  const monthlyDateWrap=el('div',{class:'fld'},el('label',{},'จ่ายทุกวันที่'),payDay);
+  const onceDateWrap=el('div',{class:'fld'},el('label',{},'วันที่ต้องจ่าย'),dueDate);
+  const endWrap=el('div',{class:'fld'},el('label',{},'เดือนสุดท้ายที่ต้องจ่าย (เว้นว่าง = ต่อเนื่อง)'),endMonth);
+  const toggleDateFields=()=>{monthlyDateWrap.style.display=recurrence==='monthly'?'block':'none';endWrap.style.display=recurrence==='monthly'?'block':'none';onceDateWrap.style.display=recurrence==='once'?'block':'none';};
+  const typeSeg=segControl([['monthly','จ่ายทุกเดือน'],['once','จ่ายครั้งเดียว']],recurrence,v=>{recurrence=v;toggleDateFields();});
+  let active=x.active!==false;
+  const activeBtn=el('button',{class:'pchip'+(active?' sel':''),onclick:()=>{active=!active;activeBtn.className='pchip'+(active?' sel':'');activeBtn.textContent=active?'✓ ใช้งาน':'พักรายการ';}},active?'✓ ใช้งาน':'พักรายการ');
+  body.append(
+    el('div',{class:'fld'},el('label',{},'ประเภท'),typeSeg),
+    el('div',{class:'fld'},el('label',{},'ชื่อรายการ'),category),
+    el('div',{class:'fld'},el('label',{},'จำนวนเงิน (บาท)'),amount),
+    monthlyDateWrap,onceDateWrap,endWrap,
+    el('div',{class:'fld'},el('label',{},'บัญชีปลายทาง'),account),
+    el('div',{class:'fld'},el('label',{},'หมายเหตุ'),note),
+    el('div',{class:'fld'},el('label',{},'สถานะ'),activeBtn));
+  toggleDateFields();m.append(body);
+  m.append(el('div',{class:'modal-foot'},
+    el('button',{class:'btn btn-ghost',onclick:closeModal},'ยกเลิก'),
+    el('button',{class:'btn btn-dark',onclick:async()=>{
+      const a=Number(amount.value);
+      if(!category.value.trim()){toast('กรุณาใส่ชื่อรายการ');return;}
+      if(!(a>=0)){toast('กรุณาใส่จำนวนเงิน');return;}
+      if(recurrence==='monthly'&&!(Number(payDay.value)>=1&&Number(payDay.value)<=31)){toast('กรุณาใส่วันที่ 1–31');return;}
+      if(recurrence==='once'&&!dueDate.value){toast('กรุณาเลือกวันที่ต้องจ่าย');return;}
+      try{
+        const {error}=await sb.rpc('fc_api_upsert_monthly_expense_item',{
+          p_id:existing?existing.id:null,
+          p_recurrence:recurrence,
+          p_category:category.value.trim(),
+          p_amount:a,
+          p_pay_day:recurrence==='monthly'?Number(payDay.value):null,
+          p_due_date:recurrence==='once'?dueDate.value:null,
+          p_destination_account:account.value.trim(),
+          p_note:note.value.trim(),
+          p_end_month:recurrence==='monthly'&&endMonth.value?endMonth.value+'-01':null,
+          p_active:active
+        });
+        if(error)throw error;
+        toast(existing?'แก้ไขรายการแล้ว':'เพิ่มรายการแล้ว');closeModal();go('hotelpay');
+      }catch(e){toast('บันทึกไม่สำเร็จ — กรุณารันไฟล์อัปเดตล่าสุดบน Supabase');}
+    }},'บันทึก')));showModal(bg);
+}
+
 async function renderSettings(p){
   p.innerHTML='';
   const sc=el('div',{class:'card'});
@@ -1989,13 +2207,14 @@ async function renderSettings(p){
     el('div',{style:'display:flex;align-items:center;gap:12px'},el('div',{class:'avatar',style:'width:40px;height:40px'},initials(u.name||u.username)),
       el('div',{},el('div',{class:'t-title'},(u.name||u.username)+(u.active===false?' (ปิดใช้งาน)':'')),el('div',{class:'t-sub'},'@'+u.username+' · '+ROLE_LABEL[u.role]+(u.role==='staff'?' · '+SCOPE_LABEL[u.scope]:'')))),
     el('div',{style:'display:flex;gap:8px'},el('button',{class:'btn btn-ghost btn-sm',onclick:()=>openUserModal(u)},'แก้ไข'),
-      (u.role==='owner'&&users.filter(x=>x.role==='owner').length<=1)?'':el('button',{class:'btn btn-danger btn-sm',onclick:async()=>{if(confirm('ลบผู้ใช้นี้?')){await Store.remove('app_users',u.id);toast('ลบแล้ว');renderSettings(p);}}},'ลบ')))));
+      (u.role==='owner'&&users.filter(x=>x.role==='owner').length<=1)?'':el('button',{class:'btn btn-danger btn-sm',onclick:async()=>{if(confirm('ลบผู้ใช้นี้?')){try{if(USE_CLOUD){const {data,error}=await sb.functions.invoke('finance-console-auth',{body:{action:'delete_user',id:u.id}});if(error||data?.error)throw new Error(data?.error||error?.message);}else await Store.remove('app_users',u.id);toast('ลบแล้ว');renderSettings(p);}catch(e){toast('ลบไม่สำเร็จ: '+(e.message||e));}}}},'ลบ')))));
   p.append(uc);
 
   const lc=el('div',{class:'card'});
   lc.append(el('div',{class:'card-h'},el('div',{},el('div',{class:'section-eyebrow'},'การแจ้งเตือน'),el('h2',{},'แจ้งเตือนรายจ่าย (ในโปรแกรม + LINE)')),el('span',{class:'badge-mode '+(USE_CLOUD?'badge-cloud':'badge-local')},USE_CLOUD?'ซิงก์กับ LINE':'เฉพาะในโปรแกรม')));
   // ช่องกรอกจำนวนวันล่วงหน้า
   const daysInp=el('input',{type:'number',min:'0',max:'60',value:String(Settings.remind_days)});
+  const ownerTimeInp=el('input',{type:'time',value:Settings.send_time||'07:00',step:'60'});
   // ข้อความพิมพ์เอง
   const msgInp=el('textarea',{placeholder:'เช่น อย่าลืมโอนจ่ายบิลด้วยนะคะ 😊 (เว้นว่าง = ใช้ข้อความมาตรฐาน)'});
   msgInp.value=Settings.reminder_message||'';
@@ -2007,7 +2226,7 @@ async function renderSettings(p){
     const bmap=Object.fromEntries(bizAll.map(b=>[b.id,b.name]));
     previewItems=txAll.filter(t=>t.kind==='expense'&&!t.is_paid&&daysUntil(t.txn_date)<=Settings.remind_days)
       .sort((a,b)=>(a.txn_date||'').localeCompare(b.txn_date||''))
-      .map(t=>({category:t.category||'รายจ่าย',biz:bmap[t.business_id]||'—',amount:t.amount,dleft:daysUntil(t.txn_date),txn_date:t.txn_date}));
+      .map(t=>({category:t.category||'รายจ่าย',biz:bmap[t.business_id]||'—',amount:t.amount,amount_unknown:!!t.amount_unknown,dleft:daysUntil(t.txn_date),txn_date:t.txn_date}));
   }catch(e){}
   const usingSample=!previewItems.length;
   if(usingSample)previewItems=[
@@ -2021,7 +2240,7 @@ async function renderSettings(p){
     const txAllM=await Store.list('transactions');
     const bmapM=Object.fromEntries(bizAll.map(b=>[b.id,b.name]));
     monthlyItems=txAllM.filter(t=>t.kind==='expense'&&(t.txn_date||'').slice(0,7)===curYM)
-      .map(t=>({category:t.category||'รายจ่าย',biz:bmapM[t.business_id]||'—',amount:t.amount,txn_date:t.txn_date}));
+      .map(t=>({category:t.category||'รายจ่าย',biz:bmapM[t.business_id]||'—',amount:t.amount,amount_unknown:!!t.amount_unknown,txn_date:t.txn_date}));
   }catch(e){}
   const usingSampleM=!monthlyItems.length;
   if(usingSampleM)monthlyItems=[
@@ -2045,10 +2264,13 @@ async function renderSettings(p){
   const refreshMonthly=()=>{monthlyPreview.textContent=buildMonthlySummary({show_business:fmt.show_business},monthlyItems,curYM);};
   const monthlyBtn=el('button',{class:'pchip'+(monthlyOn?' sel':''),onclick:()=>{monthlyOn=!monthlyOn;monthlyBtn.className='pchip'+(monthlyOn?' sel':'');monthlyBtn.textContent=monthlyOn?'✓ ส่งสรุปทุกสิ้นเดือน':'ปิดสรุปสิ้นเดือน';monthlyWrap.style.display=monthlyOn?'block':'none';}},monthlyOn?'✓ ส่งสรุปทุกสิ้นเดือน':'ปิดสรุปสิ้นเดือน');
   lc.append(
-    el('div',{class:'fld'},el('label',{},'แจ้งล่วงหน้ากี่วันก่อนครบกำหนด'),daysInp,
-      el('div',{class:'field-help'},'ใช้ทั้งการแจ้งเตือนในหน้าแดชบอร์ด และสรุปที่ส่งเข้า LINE ทุกเช้า (กรอก 0 = เฉพาะที่ครบกำหนดวันนี้/เลยกำหนด)')),
+    el('div',{class:'row'},
+      el('div',{class:'fld'},el('label',{},'แจ้งล่วงหน้ากี่วันก่อนครบกำหนด'),daysInp,
+        el('div',{class:'field-help'},'เลือก 0 = แจ้งเช้าวันครบกำหนด')),
+      el('div',{class:'fld'},el('label',{},'เวลาแจ้ง Owner (เวลาไทย)'),ownerTimeInp,
+        el('div',{class:'field-help'},'เลือกเวลาได้ เช่น 06:30, 07:00 หรือ 08:00 น.'))),
     el('div',{class:'fld'},el('label',{},'ข้อความแจ้งเตือน (พิมพ์เอง)'),msgInp,
-      el('div',{class:'field-help'},'ข้อความนี้จะขึ้นเป็นหัวข้อความแจ้งเตือนทั้งในแอปและ LINE · เว้นว่างไว้จะใช้ข้อความมาตรฐาน')));
+      el('div',{class:'field-help'},'แก้ข้อความก่อนบันทึกหรือก่อนกดส่งทดสอบได้ · เว้นว่างไว้จะใช้ข้อความมาตรฐาน')));
   // ตัวเลือก: ไม่แจ้งเตือนซ้ำรายการเดิม (มีผลทั้งการ์ด "ต้องดำเนินการ" ในแอป และข้อความ LINE ทุกเช้า)
   let noRepeatOn=Settings.no_repeat_reminders;
   const noRepeatBtn=el('button',{class:'pchip'+(noRepeatOn?' sel':''),
@@ -2071,7 +2293,7 @@ async function renderSettings(p){
   if(USE_CLOUD)lc.append(el('div',{class:'fld'},el('label',{},'ตัวเลือกการส่ง LINE'),el('div',{style:'display:flex;gap:8px;flex-wrap:wrap'},emptyBtn,lineBtn,monthlyBtn)));
   // ---- กล่องสรุปสิ้นเดือน: พรีวิว + ปุ่มส่งทดสอบ (แสดงเมื่อเปิดใช้งาน) ----
   const monthlyTestBtn=el('button',{class:'btn btn-ghost btn-sm',onclick:async()=>{
-    try{const {error}=await sb.rpc('fc_line_send_monthly_now');if(error)throw error;toast('ส่งสรุปสิ้นเดือน (ทดสอบ) เข้า LINE แล้ว');}
+    try{const {error}=await sb.rpc('fc_api_line_send_monthly_now');if(error)throw error;toast('ส่งสรุปสิ้นเดือน (ทดสอบ) เข้า LINE แล้ว');}
     catch(e){toast('ส่งไม่สำเร็จ — ตรวจสอบว่าติดตั้งไฟล์ LINE เวอร์ชันใหม่บน Supabase แล้ว');}
   }},'ส่งสรุปเดือนนี้ทดสอบเข้า LINE');
   const monthlyWrap=el('div',{class:'fld'},
@@ -2086,18 +2308,99 @@ async function renderSettings(p){
   actions.append(el('button',{class:'btn btn-dark',html:svg(I.check)+'บันทึกการตั้งค่า',onclick:async()=>{
     const d=Number(daysInp.value);
     if(!(d>=0&&d<=60)){toast('กรุณาใส่จำนวนวัน 0–60');return;}
-    try{await saveSettings({remind_days:d,reminder_message:msgInp.value.trim(),send_when_empty:sendEmpty,line_enabled:lineOn,show_date:fmt.show_date,show_divider:fmt.show_divider,show_business:fmt.show_business,show_total:fmt.show_total,compact:fmt.compact,show_days_left:fmt.show_days_left,monthly_summary_enabled:monthlyOn,no_repeat_reminders:noRepeatOn});toast('บันทึกการตั้งค่าแล้ว');renderSettings(p);}
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(ownerTimeInp.value)){toast('กรุณาเลือกเวลาแจ้ง Owner');return;}
+    try{await saveSettings({remind_days:d,send_time:ownerTimeInp.value,reminder_message:msgInp.value.trim(),send_when_empty:sendEmpty,line_enabled:lineOn,show_date:fmt.show_date,show_divider:fmt.show_divider,show_business:fmt.show_business,show_total:fmt.show_total,compact:fmt.compact,show_days_left:fmt.show_days_left,monthly_summary_enabled:monthlyOn,no_repeat_reminders:noRepeatOn});toast('บันทึกข้อความ วัน และเวลาแล้ว');renderSettings(p);}
     catch(e){toast('บันทึกในแอปแล้ว แต่ซิงก์ LINE ไม่สำเร็จ — ยังไม่ได้ติดตั้งไฟล์ LINE (ดูคู่มือ)');}
-  }},'บันทึกการตั้งค่า'));
+  }}));
   if(USE_CLOUD)actions.append(el('button',{class:'btn btn-ghost',onclick:async()=>{
-    try{const {error}=await sb.rpc('fc_line_send_now');if(error)throw error;toast('ส่งข้อความทดสอบเข้า LINE แล้ว');}
+    try{const {error}=await sb.rpc('fc_api_line_send_now');if(error)throw error;toast('ส่งข้อความทดสอบเข้า LINE แล้ว');}
     catch(e){toast('ส่งไม่สำเร็จ — ตรวจสอบว่าติดตั้งไฟล์ LINE บน Supabase แล้ว');}
   }},'ส่งทดสอบเข้า LINE'));
   lc.append(actions);
   lc.append(el('div',{class:'field-help',style:'margin-top:14px;line-height:1.7'},USE_CLOUD
-    ?'การตั้งค่านี้จะซิงก์ไปที่ LINE โดยอัตโนมัติ · ต้องติดตั้งไฟล์ “line_notify_v2.sql” เวอร์ชันใหม่บน Supabase หนึ่งครั้งก่อน (ดูคู่มือ LINE_SETUP) · หลังจากนั้นระบบส่งแจ้งเตือนรายจ่ายค้างเข้า LINE ให้เองทุกเช้า 07:00 น. และส่งสรุปรายจ่ายทั้งเดือนในวันสุดท้ายของเดือน เวลา 17:00 น. (ถ้าเปิดใช้งาน)'
+    ?`การตั้งค่านี้จะซิงก์ไปที่ LINE โดยอัตโนมัติ · ระบบส่งแจ้งเตือน Owner เวลา ${Settings.send_time||'07:00'} น. ตามวันที่เลือก และส่งสรุปรายจ่ายทั้งเดือนในวันสุดท้ายของเดือน เวลา 17:00 น. (ถ้าเปิดใช้งาน)`
     :'ตอนนี้อยู่โหมดทดลอง (เก็บในเครื่อง) — การตั้งค่าใช้กับการแจ้งเตือนในแอปเท่านั้น ยังไม่ส่ง LINE'));
   p.append(lc);
+
+  // ย้ายส่วนนี้ไปหน้า "โรงแรมจ่ายให้ Owner" แล้ว — คงโค้ดเดิมไว้ชั่วคราวเพื่อย้อนกลับได้
+  if(false){
+  const mc=el('div',{class:'card'});
+  let monthlyGroup={enabled:true,remind_days:3,send_time:'07:10',custom_message:'',connected:false,items:[]};
+  if(USE_CLOUD){
+    try{
+      const {data,error}=await sb.rpc('fc_api_get_monthly_expense_settings');
+      if(error)throw error;
+      if(data)monthlyGroup={...monthlyGroup,...data,items:Array.isArray(data.items)?data.items:[]};
+    }catch(e){}
+  }
+  mc.append(el('div',{class:'card-h'},
+    el('div',{},el('div',{class:'section-eyebrow'},'กลุ่ม LINE แยก'),el('h2',{},'ค่าใช้จ่ายประจำเดือน — 5 โรงแรมจ่ายให้')),
+    el('span',{class:'badge-mode '+(monthlyGroup.connected?'badge-cloud':'badge-local')},monthlyGroup.connected?'เชื่อมต่อแล้ว':'รอติดตั้ง')));
+  if(!monthlyGroup.items.length){
+    mc.append(el('div',{class:'alert-over'},
+      el('div',{class:'rm-main'},el('div',{class:'rm-title'},'ยังไม่ได้ติดตั้งชุดกลุ่มค่าใช้จ่ายประจำเดือน'),
+        el('div',{class:'rm-meta'},'รันไฟล์ line_notify_v5_monthly_expense_group.sql บน Supabase หนึ่งครั้ง แล้วโหลดหน้านี้ใหม่'))));
+  }else{
+    // แสดงแบบย่อเป็นค่าเริ่มต้น เพื่อลดความยาวของหน้าตั้งค่า
+    const editWrap=el('div',{style:'display:none;padding-top:16px;border-top:1px solid var(--line);margin-top:14px'});
+    const editBtn=el('button',{class:'btn btn-ghost btn-sm'},'แก้ไขข้อความ / วัน / เวลา');
+    const compactStatus=el('div',{class:'t-sub'},`${monthlyGroup.enabled===false?'ปิดอยู่':'เปิดอยู่'} · ล่วงหน้า ${monthlyGroup.remind_days??3} วัน · ${monthlyGroup.send_time||'07:10'} น. · ${monthlyGroup.items.length} รายการ`);
+    let editOpen=false;
+    editBtn.addEventListener('click',()=>{
+      editOpen=!editOpen;
+      editWrap.style.display=editOpen?'block':'none';
+      editBtn.textContent=editOpen?'ปิดรายละเอียด':'แก้ไขข้อความ / วัน / เวลา';
+    });
+    mc.append(el('div',{style:'display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap'},compactStatus,editBtn));
+
+    const groupMsg=el('textarea',{placeholder:'เช่น 📅 ค่าใช้จ่ายประจำเดือน — 5 โรงแรมจ่ายให้'});
+    groupMsg.value=monthlyGroup.custom_message||'';
+    const groupDays=el('input',{type:'number',min:'0',max:'30',value:String(monthlyGroup.remind_days??3)});
+    const groupTime=el('input',{type:'time',value:monthlyGroup.send_time||'07:10',step:'60'});
+    const groupPreview=el('pre',{style:'max-height:340px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:.88rem;line-height:1.5;margin:0;background:#eaf6ea;border:1px solid #cfe6cf;border-left:3px solid #06c755;border-radius:10px;padding:12px 14px;color:#14321f'});
+    const refreshGroupPreview=()=>{groupPreview.textContent=buildMonthlyExpenseGroupMessage(monthlyGroup.items,curYM,groupMsg.value);};
+    groupMsg.addEventListener('input',refreshGroupPreview);
+    let groupOn=monthlyGroup.enabled!==false;
+    const groupOnBtn=el('button',{class:'pchip'+(groupOn?' sel':''),onclick:()=>{
+      groupOn=!groupOn;
+      groupOnBtn.className='pchip'+(groupOn?' sel':'');
+      groupOnBtn.textContent=groupOn?'✓ เปิดแจ้งเตือนกลุ่มนี้':'ปิดแจ้งเตือนกลุ่มนี้';
+    }},groupOn?'✓ เปิดแจ้งเตือนกลุ่มนี้':'ปิดแจ้งเตือนกลุ่มนี้');
+    editWrap.append(el('div',{class:'fld'},el('label',{},'หัวข้อความแจ้งเตือน'),groupMsg,
+      el('div',{class:'field-help'},'แก้ข้อความบรรทัดแรกได้เอง · รายการ วันจ่าย ยอด และบัญชีจะต่อท้ายให้อัตโนมัติ')));
+    editWrap.append(el('div',{class:'row'},
+      el('div',{class:'fld'},el('label',{},'เตือนล่วงหน้ากี่วัน'),groupDays,
+        el('div',{class:'field-help'},'เลือก 0 = เตือนเช้าวันครบกำหนด · รายการเดิมจะส่งเพียงครั้งเดียวต่อเดือน')),
+      el('div',{class:'fld'},el('label',{},'เวลาแจ้งเตือน (เวลาไทย)'),groupTime,
+        el('div',{class:'field-help'},'เลือกเวลาได้ทุกนาที เช่น 06:30, 07:00 หรือ 08:00 น.')),
+      el('div',{class:'fld'},el('label',{},'สถานะ'),groupOnBtn)));
+    editWrap.append(el('div',{class:'fld'},el('label',{},'ตัวอย่างข้อความ'),groupPreview));
+    refreshGroupPreview();
+
+    const groupActions=el('div',{style:'display:flex;gap:10px;flex-wrap:wrap'});
+    groupActions.append(el('button',{class:'btn btn-dark',html:svg(I.check)+'บันทึกการตั้งค่ากลุ่ม',onclick:async()=>{
+      const d=Number(groupDays.value);
+      if(!(d>=0&&d<=30)){toast('กรุณาใส่จำนวนวัน 0–30');return;}
+      if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(groupTime.value)){toast('กรุณาเลือกเวลาแจ้งเตือน');return;}
+      try{
+        const {error}=await sb.rpc('fc_api_set_monthly_expense_settings',{p_remind_days:d,p_send_time:groupTime.value,p_custom_message:groupMsg.value.trim(),p_enabled:groupOn});
+        if(error)throw error;
+        compactStatus.textContent=`${groupOn?'เปิดอยู่':'ปิดอยู่'} · ล่วงหน้า ${d} วัน · ${groupTime.value} น. · ${monthlyGroup.items.length} รายการ`;
+        toast('บันทึกข้อความ วัน และเวลาแล้ว');
+      }catch(e){toast('บันทึกไม่สำเร็จ — กรุณาตรวจสอบชุดติดตั้งกลุ่มใหม่');}
+    }},'บันทึกการตั้งค่ากลุ่ม'));
+    groupActions.append(el('button',{class:'btn btn-ghost',onclick:async()=>{
+      try{
+        const {error}=await sb.rpc('fc_api_line_monthly_expense_send_now');
+        if(error)throw error;
+        toast('ส่งรายการเดือนนี้ทดสอบเข้ากลุ่มใหม่แล้ว');
+      }catch(e){toast('ส่งไม่สำเร็จ — กรุณาตรวจสอบชุดติดตั้งกลุ่มใหม่');}
+    }},'ส่งเดือนนี้ทดสอบเข้ากลุ่มใหม่'));
+    editWrap.append(groupActions);
+    mc.append(editWrap);
+  }
+  p.append(mc);
+  }
 
   p.append(el('div',{class:'card'},el('button',{class:'btn btn-ghost btn-block',onclick:logout},'ออกจากระบบ')));
 }
@@ -2121,7 +2424,7 @@ function openUserModal(existing){
   const {bg,m}=modal(existing?'แก้ไขผู้ใช้':'เพิ่มผู้ใช้ใหม่',existing?'@'+existing.username:'กำหนดสิทธิ์และรหัสผ่านให้ผู้ใช้');const body=el('div',{class:'modal-body'});
   const name=el('input',{type:'text',placeholder:'เช่น คุณสมชาย',value:u.name||''});
   const uname=el('input',{type:'text',placeholder:'ภาษาอังกฤษ ไม่มีเว้นวรรค',value:u.username||'',autocapitalize:'off'});
-  const pass=el('input',{type:'text',placeholder:existing?'เว้นว่างหากไม่เปลี่ยน':'ตั้งรหัสผ่าน',value:''});
+  const pass=el('input',{type:'password',autocomplete:'new-password',placeholder:existing?'เว้นว่างหากไม่เปลี่ยน':'ตั้งรหัสผ่านอย่างน้อย 8 ตัวอักษร',value:''});
   let role=u.role||'staff';
   const scopeSel=el('select',{});[['all','ทุกธุรกิจ'],['general','ทั่วไป (ยกเว้นโรงแรม)'],['hotel','เฉพาะโรงแรม']].forEach(([v,l])=>{const o=el('option',{value:v},l);if(u.scope===v)o.selected=true;scopeSel.append(o);});
   const scopeWrap=el('div',{class:'fld'},el('label',{},'สิทธิ์เห็นธุรกิจ'),scopeSel);
@@ -2138,11 +2441,20 @@ function openUserModal(existing){
     const users=await Store.list('app_users');
     if(users.some(x=>x.id!==(existing&&existing.id)&&x.username.toLowerCase()===uname.value.trim().toLowerCase())){toast('ชื่อผู้ใช้นี้มีอยู่แล้ว');return;}
     if(!existing&&!pass.value){toast('กรุณาตั้งรหัสผ่าน');return;}
-    const payload={name:name.value.trim(),username:uname.value.trim(),role,scope:role==='owner'?'all':scopeSel.value,active};
-    if(pass.value)payload.password=pass.value;
-    if(existing){await Store.update('app_users',existing.id,payload);if(existing.id===App.user.id)Object.assign(App.user,payload);}
-    else await Store.insert('app_users',payload);
-    toast('บันทึกแล้ว');closeModal();renderSettings($('#page'));
+    if(pass.value&&pass.value.length<8){toast('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');return;}
+    const payload={id:existing?.id||null,name:name.value.trim(),username:uname.value.trim(),role,scope:role==='owner'?'all':scopeSel.value,active,password:pass.value||''};
+    try{
+      let saved;
+      if(USE_CLOUD){
+        const {data,error}=await sb.functions.invoke('finance-console-auth',{body:{action:'save_user',user:payload}});
+        if(error||data?.error)throw new Error(data?.error||error?.message);saved=data.user;
+      }else{
+        const local={...payload};delete local.id;
+        if(existing)saved=await Store.update('app_users',existing.id,local);else saved=await Store.insert('app_users',local);
+      }
+      if(existing?.id===App.user.id)Object.assign(App.user,saved);
+      toast('บันทึกแล้ว');closeModal();renderSettings($('#page'));
+    }catch(e){toast('บันทึกผู้ใช้ไม่สำเร็จ: '+(e.message||e));}
   }},'บันทึก'));
   m.append(foot);showModal(bg);
 }
@@ -2152,6 +2464,15 @@ function openUserModal(existing){
   await seedIfEmpty();
   setupLogin();tickClock();
   document.getElementById('signout').addEventListener('click',logout);
+  if(USE_CLOUD){
+    try{
+      const {data:{session}}=await sb.auth.getSession();
+      if(session){
+        const {data:profile}=await sb.from('app_users').select('id,name,username,role,scope,active').eq('auth_user_id',session.user.id).maybeSingle();
+        if(profile&&profile.active!==false)await enterApp(profile);else await sb.auth.signOut();
+      }
+    }catch(e){await sb.auth.signOut();}
+  }
 })();
 </script>
 </body>
