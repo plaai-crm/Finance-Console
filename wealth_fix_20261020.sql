@@ -299,7 +299,9 @@ begin
     if to_regclass('public.'||t) is not null then
       execute format('revoke all on table public.%I from anon',t);
       execute format('revoke all on table public.%I from authenticated',t);
-      if t='businesses' then
+      if t='app_users' then
+        execute 'grant select (id,name,username,role,scope,active,created_at) on table public.app_users to authenticated';
+      elsif t='businesses' then
         execute format('grant select,insert,update on table public.%I to authenticated',t);
       else
         execute format('grant select,insert,update,delete on table public.%I to authenticated',t);

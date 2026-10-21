@@ -16,6 +16,7 @@ ok(!html.includes('markReminded(due)'),'Dashboard ยังทำเครื่
 ok(!/const todayISO=.*toISOString/.test(html),'todayISO ยังใช้ UTC');
 ok(html.includes("type:'password',autocomplete:'new-password'"),'ช่องรหัสผ่านผู้ใช้ยังไม่ซ่อนข้อความ');
 ok(html.includes("finance-console-auth"),'ไม่พบ Auth Edge Function ในหน้าเว็บ');
+ok(html.includes("t==='app_users'?'id,name,username,role,scope,active,created_at':'*'"),'หน้าเว็บยังอ่านคอลัมน์รหัสผ่านของ app_users');
 ok(html.includes("finance-documents"),'ไม่พบ private document storage');
 ok(html.includes("storage_path"),'หน้าเว็บยังไม่รองรับ storage_path');
 ok(html.includes("totalDue=principal+interest"),'ยอดเงินกู้ยังไม่รวมดอกเบี้ย');
@@ -34,6 +35,7 @@ ok(migration.includes('finance_audit_log'),'Migration ยังไม่มี a
 ok(migration.includes("bucket_id='finance-documents' and public.fc_is_owner()"),'Storage policy ยังไม่จำกัด Owner');
 ok(!migration.includes('price_date'),'Migration ยังอ้างคอลัมน์ price_date ที่ไม่แน่นอน');
 ok(migration.includes('revoke delete on table public.businesses from authenticated'),'Migration ยังไม่ป้องกันการลบธุรกิจ');
+ok(migration.includes('grant select (id,name,username,role,scope,active,created_at) on table public.app_users to authenticated'),'Migration ยังเปิดคอลัมน์รหัสผ่านของ app_users ให้ browser');
 ok(!/to anon[\s\S]{0,80}using\s*\(true\)/i.test(migration),'Migration ยังมี RLS แบบ anon/allow-all');
 for(const [name,sql] of [['migration',migration],['rollback',rollback]]){
   const tags=[...sql.matchAll(/\$[a-z_]*\$/gi)].map(m=>m[0]);

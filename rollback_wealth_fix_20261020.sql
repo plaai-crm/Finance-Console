@@ -56,6 +56,10 @@ $monthly$;
 
 grant delete on table public.businesses to authenticated;
 
+-- Restore the former app_users table grants for compatibility with the old UI.
+revoke all on table public.app_users from authenticated;
+grant select,insert,update,delete on table public.app_users to authenticated;
+
 -- Remove only the new audit/stamp triggers. Audit rows and columns remain intact.
 do $triggers$
 declare t text;

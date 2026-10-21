@@ -429,7 +429,7 @@ let sb=null; if(USE_CLOUD) sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.
 const LS={read(t){try{return JSON.parse(localStorage.getItem('fc_'+t)||'[]')}catch(e){return[]}},write(t,r){localStorage.setItem('fc_'+t,JSON.stringify(r))}};
 const Store={
   async list(t,order){
-    if(USE_CLOUD){let q=sb.from(t).select('*');if(order)q=q.order(order.col,{ascending:order.asc!==false});const{data,error}=await q;if(error)throw error;return data||[];}
+    if(USE_CLOUD){const cols=t==='app_users'?'id,name,username,role,scope,active,created_at':'*';let q=sb.from(t).select(cols);if(order)q=q.order(order.col,{ascending:order.asc!==false});const{data,error}=await q;if(error)throw error;return data||[];}
     let r=LS.read(t);if(order)r=[...r].sort((a,b)=>{const A=a[order.col],B=b[order.col];const x=A>B?1:A<B?-1:0;return order.asc===false?-x:x});return r;
   },
   async insert(t,o){
